@@ -1,0 +1,19 @@
+@media print {
+    .certificate-container {
+      width: 210mm;
+      height: 297mm;
+      margin: 0;
+      padding: 0;
+      border: none;
+    }
+  }
+
+
+.container {
+    width: 560px;
+    height: 400px;
+    background-color: red;
+    
+  }
+  
+  
