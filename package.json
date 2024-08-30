@@ -20,7 +20,7 @@
     "@langchain/openai": "^0.2.5",
     "@reduxjs/toolkit": "^2.2.7",
     "aws4": "^1.13.0",
-    "axios": "^1.7.3",
+    "axios": "^1.7.5",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "cloudinary": "^2.4.0",
