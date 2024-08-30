@@ -246,7 +246,7 @@ if(isQuizEnded){
 useEffect(() => {
   const getQuizAssets=async()=>{
     try{
-      const res = await fetch(`https://nafs-platform.vercel.app/api/quizzes?id=${selectQuizToStart._id}`, {
+      const res = await fetch(`https://nafs-fakih.vercel.app/api/quizzes?id=${selectQuizToStart._id}`, {
         method: 'GET',
         headers: {
           'Content-type': 'application/json',
