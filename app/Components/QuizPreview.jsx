@@ -25,36 +25,6 @@ console.log(quiz)
 
   return (
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     <div className='w-4/5 h-full    py-10 px-16  '>
    <h1 className='font-extrabold text-xl  text-theme my-6  m-auto w-full text-center mb-10 rounded-md sel'>Quiz Title :  {title}</h1>
    {quiz.length >0 && (

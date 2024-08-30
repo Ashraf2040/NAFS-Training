@@ -8,3 +8,4 @@ export const getUser = async (req) => {
     const users = await User.find({req})
     return users
 }
+

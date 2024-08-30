@@ -25,12 +25,12 @@ const PieCharts = ({code}) => {
     }, [])
     const currentStudent = students?.find(student => student.code == code)
    console.log(currentStudent)
-   const trials=currentStudent?.trials.filter((trial,index)=> trial.index <=6)
+   const trials=currentStudent?.quizzes.filter((trial,index)=> trial.index <=6)
  console.log(trials)
- const data = currentStudent?.trials.slice(-5).map((trial, index) => {
-  return { name: `Trial ${index + 1}`, value:trial};
+ const data1 = currentStudent?.quizzes.slice(-5).map((trial, index) => {
+  return { name: `Trial ${index + 1}`, value:trial.score};
 });
-// console.log(data1)
+console.log(data1)
     // const data = [
     //     { name: 'Group A', value: 400 },
     //     { name: 'Group B', value: 300 },
@@ -58,7 +58,7 @@ const PieCharts = ({code}) => {
     <ResponsiveContainer width="100%" height="100%">
     <PieChart width={800} height={800} className='' >
       <Pie
-        data={data}
+        data={data1}
         cx="50%"
         cy="50%"
         labelLine={false}
@@ -68,7 +68,7 @@ const PieCharts = ({code}) => {
         dataKey="value"
        
       >
-        {data?.map((entry, index) => (
+        {data1?.map((entry, index) => (
           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
         ))}
       </Pie>

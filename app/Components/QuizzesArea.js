@@ -11,6 +11,7 @@ import { connectToDB } from '@/libs/mongoDB';
 import Link from 'next/link';
 import Hero from './Hero';
 import { CloudCog } from 'lucide-react';
+import Hero2 from './Hero2';
 
 function QuizzesArea({ props }) {
   const { allQuizzes, userObject, isLoadingObject } =
@@ -38,7 +39,7 @@ function QuizzesArea({ props }) {
         .then((response) => response.json())
         .then((data) => {
           
-        //  console.log(data)
+         console.log(data)
           setStudents(data);
         })
         .catch((error) => {
@@ -48,6 +49,19 @@ function QuizzesArea({ props }) {
  
               getStudentData();
   }, [setStudents]);
+  
+   const currentStudent = students?.find(student => student.code === session?.user?.code)
+
+   console.log(currentStudent)
+  // const studentScores =studentQuizzes?.map(quiz => quiz.score)
+  // const studentPercentages =studentQuizzes?.map(quiz => quiz.percentage)
+  // const percentage= studentQuizzes?.map(quiz => quiz.percentage).reduce((a, b) => a + b, 0)/studentQuizzes?.length
+
+  // const totalScore = studentScores.reduce((acc, curr) => acc + curr, 0);
+
+  // console.log(studentScores)
+
+       
 
   const filterQuizzes = (quizzes, subject, grade,skill) => {
     return quizzes.filter(quiz => {
@@ -131,15 +145,17 @@ function QuizzesArea({ props }) {
                <div className="statistcs w-full mt-4 bg-theme h-full rounded-[4px]">
 <table className='w-full  flex flex-col px-1  '>
   <th className='text-center '>
-    <tr className='text-white grid grid-cols-10  py-1 '>
+    <tr className='text-white grid grid-cols-9  py-1 '>
     <td className=' mx-auto'>Code</td>
     <td className='col-span-1 '>Grade</td>
     <td className='col-span-2   w-full text-center'>Name</td>
     <td className=' mx-auto'>No Of Trials</td>
-    <td className='text-center mx-auto'>Previous Score</td>
-    <td className='text-center mx-auto'>Current Score</td>
+    <td className='text-center mx-auto'> Score</td>
+    <td className='text-center mx-auto'>
+      percentage
+    </td>
     <td className='text-center mx-auto'>Progress</td>
-    <td className='text-center mx-auto'>Total Points</td>
+  
     <td className='text-center mx-auto'>Report</td>
     
     </tr>
@@ -148,17 +164,16 @@ function QuizzesArea({ props }) {
 
  
     {students.map((student, index) => (
-      <tr key={index} className='bg-white w-full grid grid-cols-10 py-1    font-normal mb-2'>
+      <tr key={index} className='bg-white w-full grid grid-cols-9 py-1    font-normal mb-2'>
         <td className=' text-center font-semibold text-red-500'>{student.code}</td>
         <td className=' text-center font-semibold text-theme'>{student.grade}</td>
         <td className='col-span-2 text-center text-theme font-semibold  w-full '>{student.fullName}</td>
-        <td className=' text-center'>{student.trials.length-1}</td>
-        <td className=' text-center'>{student.trials[student.trials.length-2]}</td>
-        <td className=' text-center'>{student.trials[student.trials.length-1]}</td>
-        <td className={` text-center ${student.trials[student.trials.length-1]>=student.trials[student.trials.length-2] ?"text-themeGreen font-semibold" : "text-red-600 font-semibold"}`}>
-{student.trials[student.trials.length-1]>=student.trials[student.trials.length-2] ?"Passed" : "Failed"}
-        </td>
-        <td className=' text-center'>{student.score}</td>
+        <td className=' text-center text-theme font-semibold'>{student.quizzes.length}</td>
+        <td className=' text-center text-theme font-semibold'>{student.quizzes.map((quiz)=>quiz.score).reduce((a, b) => a + b, 0)}</td>
+        <td className=' text-center text-theme font-semibold'>{student.quizzes?.map(quiz => quiz.percentage).reduce((a, b) => a + b, 0)/student.quizzes?.length} %</td>
+        <td className={` text-center ${student.quizzes?.map(quiz => quiz.percentage).reduce((a, b) => a + b, 0)/student.quizzes?.length >= 65 ? "text-green-500" : "text-red-500"} font-semibold`}>{`${student.quizzes?.map(quiz => quiz.percentage).reduce((a, b) => a + b, 0)/student.quizzes?.length >= 65 ? "Passed" : "Failed"}`}</td>
+        
+       
         <td className=' text-center underline text-themeYellow font-semibold '><Link href={`/report/${student.code}`}>Report</Link></td>
       </tr>
     ))}

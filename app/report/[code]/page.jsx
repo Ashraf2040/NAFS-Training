@@ -30,8 +30,9 @@ const ReportPage = ({params}) => {
     console.log(students)
    const currentStudent = students?.find(student => student.code == params.code)
    console.log(currentStudent)
-   const score = currentStudent?.score
-   const trials = currentStudent?.trials
+   const score = currentStudent?.quizzes.map(quiz => quiz.score).reduce((a, b) => a + b, 0)
+   const trials = currentStudent?.quizzes.length
+   const percentage= currentStudent?.quizzes.map(quiz => quiz.percentage).reduce((a, b) => a + b, 0)/currentStudent?.quizzes.length
    const myCode = currentStudent?.code
 
 
@@ -54,30 +55,38 @@ const ReportPage = ({params}) => {
   };
   return (
     
-    <div className='mx-auto relative mt-16 bg-white   max-w-[1300px] gap-4 px-6 pt-12  h-full flex flex-col justify-center  ' ref={reportRef}>
-      {/* <button className='absolute top-5 right-5 font-bold text-theme'>Print</button> */}
-      <Image src="/hero-img.svg" alt="progression" width={100} height={100} className='absolute top-10 left-10 ' />
+    <div className='mx-auto relative my-16 bg-white    max-w-[1400px] gap-10 px-6 pt-12   flex flex-col justify-center  ' ref={reportRef}>
+     <div>
+     <Image src="/hero-img.svg" alt="progression" width={100} height={100} className='absolute top-10 left-10 ' />
       <h1 className='text-3xl text-theme font-bold underline w-full text-center'>Progression Monitoring Report</h1>
       <Image src="/print.svg" alt="progression" width={35} height={30} className='absolute top-10 right-10 cursor-pointer exclude-from-print'onClick={handlePrint} />
-     <div className='grid grid-cols-5 w-full items-center   gap-3 px-3 h-[400px] '> 
-      <div className=' text-xl   flex  flex-col gap-3 col-span-3  text-theme font-bold   '>
+     </div>
+   
+      <div className=' text-xl h-[450px]  w-full    items-center justify-between  flex text-theme font-bold   '>
 
-
+<div className="  h-4/5 px-4 w-3/5 flex flex-col items-center justify-around">
 <div className='w-full grid  grid-cols-3'><h2 className='col-span-1'>Student Name :</h2> <span className='col-span-2  text-themeYellow'>{currentStudent?.fullName}</span></div>
 <div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Student Code :</h2> <span className='col-span-2 text-themeYellow'>{params.code}</span></div>
-<div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Grade :</h2> <span className='col-span-2 text-themeYellow'>6 A</span></div>
-<div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Test Attemps :</h2> <span className='col-span-2 text-themeYellow'>{trials?.length}</span></div>
-<div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Total Points :</h2> <span className='col-span-2 text-themeYellow'>{score}</span></div>
-<div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Percentage :</h2> <span className='col-span-2 text-themeYellow'>{Math.ceil(score/trials?.length)}%</span></div>
+<div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Grade :</h2> <span className='col-span-2 text-themeYellow'>{currentStudent?.grade}</span></div>
+<div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Test Attemps :</h2> <span className='col-span-2 text-themeYellow'>{trials}</span></div>
+<div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Score :</h2> <span className='col-span-2 text-themeYellow'>{score}</span></div>
+<div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Percentage :</h2> <span className='col-span-2 text-themeYellow'>{percentage} %</span></div>
+</div>
+<div className='  h-full w-2/5 '><PieCharts  code={myCode}/></div>
+<div>
 
 </div>
-<div className=' col-span-2 h-[450px] '>
-  <PieCharts  code={myCode}/></div>
+
 </div>
-      <div className='h-[600px] w-full  '>
+<div className='  h-[600px]  w-full  mt-10'>
+ 
+
+      <div className='h-[550px]   '>
             <Chart code={myCode} />
         </div>
     </div>
+    </div>
+    
   )
 } 
 

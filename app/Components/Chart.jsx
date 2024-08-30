@@ -1,4 +1,5 @@
 "use client"
+import { CloudCog } from 'lucide-react';
 import React, { PureComponent, useEffect, useState } from 'react';
 import { LineChart,ComposedChart,Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer ,AreaChart, Area} from 'recharts';
 const Chart = ({code}) => {
@@ -23,11 +24,13 @@ const Chart = ({code}) => {
     }, [])
     const currentStudent = students?.find(student => student.code == code)
    console.log(currentStudent)
-   const trials=currentStudent?.trials.filter((trial,index)=> trial.index <=6)
+   const trials=currentStudent?.quizzes.filter((trial,index)=> trial.index <=6)
  console.log(trials)
- const data = currentStudent?.trials.slice(-5).map((trial, index) => {
-    return { name: `Trial ${index + 1}`, Points: trial ,Max:100};
+ const data1 = currentStudent?.quizzes.map((trial, index) => {
+    return { name: `Trial ${index + 1}`, Points: trial.score ,Max:trial.total};
   });
+
+  console.log(data1)
     // console.log(data1)
     // const data = [
     //     {
@@ -78,14 +81,14 @@ const Chart = ({code}) => {
       
       
   return (
-    <div className=' w-full h-full flex justify-center items-center'>
+    <div className=' w-full h-full flex justify-center items-center '>
 
 
 <ResponsiveContainer  height="100%">
         <LineChart
           width={550}
           height={400}
-          data={data}
+          data={data1}
           margin={{
             top: 5,
             right: 30,
@@ -106,7 +109,7 @@ const Chart = ({code}) => {
         <ComposedChart
           width={550}
           height={400}
-          data={data}
+          data={data1}
           margin={{
             top: 5,
             right: 20,

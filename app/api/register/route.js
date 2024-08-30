@@ -8,7 +8,7 @@ connectToDB();
 
 export async function POST(request) {
   try {
-    const { fullName, email, password ,code,role  } = await request.json();
+    const { fullName, email, password ,code,role,grade  } = await request.json();
 
     const user = await User.findOne({ code });
 
@@ -27,7 +27,8 @@ export async function POST(request) {
       email,
       password,
       code,
-      role
+      role,
+      grade
       
     });
 

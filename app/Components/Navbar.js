@@ -71,7 +71,7 @@ function Navbar(props) {
               </button>
             ) : (
               <button
-                className="block rounded-lg bg-theme px-7 py-3 text-lg font-medium text-themeYellow transition focus:outline-none"
+                className="block rounded-lg bg-theme px-7 py-3 text-lg font-medium text-white transition focus:outline-none"
                 type="button"
                 onClick={() => {
                   router.push('/login');

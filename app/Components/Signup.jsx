@@ -11,6 +11,7 @@ const Signup = () => {
   const [fullName, setFullName] = useState("");
   const [code, setCode] = useState(0);
   const [role, setRole] = useState("");
+  const [grade, setGrade] = useState("");
 
   const router = useRouter();
 
@@ -28,7 +29,7 @@ const Signup = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email,  password, fullName ,code,role}),
+        body: JSON.stringify({ email,  password, fullName ,code,role,grade}),
       });
 
       if (res.ok) {
@@ -86,6 +87,17 @@ const Signup = () => {
             name="email"
             placeholder="Your password"
             onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+        <div className="flex  w-full gap-20 justify-between items-center">
+          <label htmlFor="email">Grade : </label>
+          <input
+            className="rounded-md px-8 py-4 bg-slate-100 "
+            type="text"
+            id="grade"
+            name="grade"
+            placeholder="Grade"
+            onChange={(e) => setGrade(e.target.value)}
           />
         </div>
         <div className="flex  w-full gap-20 justify-between items-center">

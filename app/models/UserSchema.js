@@ -11,6 +11,8 @@ const userSchema = new Schema(
     code: { type: Number, required: true },
     trials: { type: Array, default: [] },
     score: { type: Number ,default:0},
+    grade: { type: String ,required:true},
+    quizzes: { type: Array, default: [] },
   },
 
   { timestamps: true }

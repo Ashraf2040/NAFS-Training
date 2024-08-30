@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { revalidatePath } from 'next/cache';
 import { setAnswers } from '@/app/reducers/answersSlice';
 import Link from 'next/link';
+import { CloudCog } from 'lucide-react';
 
 function QuizStartQuestions({ onUpdateTime }) {
   const [score, setScore] = useState(0);
@@ -25,6 +26,8 @@ function QuizStartQuestions({ onUpdateTime }) {
   const [quiz, setQuiz] = useState("");
 //  console.log("object code",code) 
 //  console.log("object score",score) 
+
+
   async function updateUserInformation() {
     if (!session || !score) {
       return; // Handle missing session or score
@@ -33,12 +36,29 @@ function QuizStartQuestions({ onUpdateTime }) {
      // Extract user ID from session
       
     try {
+      function calculateScore(arrayA, arrayB) {
+      let questionsScore = 0;
+      for (let i = 0; i < arrayA.length; i++) {
+        if (arrayA[i] === arrayB[i]) {
+          questionsScore += 10;
+        }
+      }
+      return questionsScore;
+    }
+    const orignalAnswer =[]
+    for (let i = 0; i < quizQuestions.length; i++) {
+      orignalAnswer.push(quiz.quizQuestions[i].correctAnswer);
+    }
+    
+    const currentQuestionScore = calculateScore(orignalAnswer, userAnswers)
+    console.log(currentQuestionScore)
       const res = await fetch('/api/user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           code,
-          score, // Update data object
+        
+          quiz:{...quiz,userAnswers,score:currentQuestionScore ,total:orignalAnswer.length*10 ,percentage:( Math.round((currentQuestionScore/orignalAnswer.length*10) ))} // Update data object
         }),
       });
   
