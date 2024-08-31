@@ -23,7 +23,7 @@ function QuizStartQuestions({ onUpdateTime }) {
   const code = session?.user?.code;
   const currentUser =useSelector((state)=>state.user)
   const [userAnswers, setUserAnswers] = useState([]);
-  const [quiz, setQuiz] = useState("");
+  const [quiz, setQuiz] = useState([]);
 //  console.log("object code",code) 
 //  console.log("object score",score) 
 
@@ -371,7 +371,9 @@ const img=images[currentQuestionIndex]?.imgeSrc
             score,
             setScore,
             quizQuestions,
-            isQuizEnded
+            isQuizEnded,
+            quiz,
+            userAnswers
             
           }}
         />
@@ -405,7 +407,9 @@ function ScoreComponent({ quizStartParentProps }) {
     score,
     quizQuestions,
     setAnswers,
-    isQuizEnded
+    isQuizEnded,
+    quiz,
+    userAnswers
   } = quizStartParentProps;
   const handlePreview = () => {
     setIsPreview(!isPreview);
@@ -479,39 +483,38 @@ console.log("your result is ",result);
     
   }
 
+  console.log(quiz)
+  const correctAnswers=quiz?.quizQuestions.map((question)=>question.correctAnswer)
+  console.log(correctAnswers)
+  console.log(userAnswers)
+
+  function calculateScore(userAnswers, correctAnswers) {
+    let score = 0;
+    for (let i = 0; i < userAnswers.length; i++) {
+      if (userAnswers[i] === correctAnswers[i]) {
+        score += 1;
+      }
+    }
+    return score;
+  }
+
+
   return (
-    <div className=" flex items-center justify-center rounded-md top-[-80px] border border-gray-200 absolute w-full h-[480px] bg-white">
+    <div className=" flex items-center px-4 rounded-md top-[-80px] border flex-col border-gray-200 absolute w-full h-[480px] bg-white">
       {/* Score */}
-      <div className=" flex gap-4 items-center justify-center flex-col">
-        <Image src={`/${emojiIconScore()}`} alt="" width={100} height={100} />
-        <div className="flex gap-1 flex-col">
-          <span className="font-bold text-2xl">Your Score</span>
-          <div className="text-[22px] text-center">
+      <div className=" flex gap-4 items-center  w-full  px-8 bg-purple-50  py-2">
+        <Image src={`/${emojiIconScore()}`} alt="" width={60} height={60} />
+        <div className="flex gap-6 items-center mx-auto">
+          <span className="font-bold text-2xl">Your Score :</span>
+          <div className="text-[22px] text-center px-4 py-2 rounded-lg  font-semibold text-theme ">
             {score }/{numberOfQuestions *10}
           </div>
         </div>
-        <button
-          onClick={() => tryAgainFunction()}
-          className="p-2 bg-theme rounded-md text-white px-6"
-        >
-          Try Again
-        </button>
+        
         {/* statistics */}
-        <div className="  w-full flex gap-2 flex-col mt-3">
-          <div className="flex gap-1 items-center justify-center">
-            <Image src="/correct-answer.png" alt="" width={20} height={20} />
-            <span className="text-[14px]">Correct Answers: {score}</span>
-          </div>
-          <div className="flex gap-1 items-center justify-center">
-            <Image src="/incorrect-answer.png" alt="" width={20} height={20} />
-            <span className="text-[14px]">
-              Incorrect Answers:
-              {selectQuizToStart.quizQuestions.length - score}
-            </span>
-          </div>
-        </div>
+       
         {/* <span>Or</span> */}
-     <div className='flex justify-center items-center  '>
+     {/* <div className='flex justify-center items-center  '>
       
       
         {isPreview ? (
@@ -520,49 +523,72 @@ console.log("your result is ",result);
         <button onClick={handlePreview}
         className='text-lg absolute top-2 right-2 bg-themeYellow font-semibold px-4 py-2 rounded-lg text-theme'
         >Preview Certificate</button>
-      )}</div>
-     <Link href="/quiz-details">
-     <button 
-        className={`${isPreview ? "hidden" : "block"} text-lg absolute bottom-2   bg-themeYellow font-semibold px-4 py-2 rounded-lg text-theme`}
-        >Quiz Preview</button>
+      )}</div> */}
      
-     </Link>
+  
+     
+   
       </div>
+      <div className=" w-3/5 justify-between  flex gap-2  my-6">
+          <div className="flex gap-1 items-center justify-center">
+            <Image src="/correct-answer.png" alt="" width={20} height={20} />
+            <span className="text-[14px]">Correct Answers:   {calculateScore(userAnswers,correctAnswers)}</span>
+          </div>
+         
+          <div className="flex gap-1 items-center justify-center">
+            <Image src="/incorrect-answer.png" alt="" width={20} height={20} />
+            <span className="text-[14px]">
+              Incorrect Answers:  
+              {numberOfQuestions - calculateScore(userAnswers,correctAnswers)}
+            </span>
+          </div>
+          <button
+          onClick={() => tryAgainFunction()}
+          className="p-2 bg-theme rounded-md text-white px-6"
+        >
+          Try Again
+        </button>
+        </div>
      {/* <button onClick={() => setIsResultPreview(!isResultPreview)}
         className={`${isPreview ? "hidden" : "block"} text-lg absolute bottom-2   bg-themeYellow font-semibold px-4 py-2 rounded-lg text-theme`}
         >Quiz Preview</button>
       </div> */}
-      {isResultPreview && isQuizEnded && ( 
+
+{/* <button 
+        className={`${isPreview ? "hidden" : "block"} text-lg  my-4 self-start     font-semibold px-4 py-2 rounded-lg text-theme`}
+        >Preview....</button> */}
+
+      
         
-        <div className="flex items-center justify-center rounded-md border border-gray-200 absolute w-full min-h-[480px] overflow-y-scroll flex-col font-semibold bg-white gap-6 p-10 ">
-        <h1 className="bg-theme text-themeYellow py-2 px-6 rounded-md">Review Questions</h1>
-        <h1 className='font-extrabold  text-theme  rounded-md'>Quiz Title :{quiz.quizTitle}</h1>
-   {quiz.length >0 && (
- quiz.map((question, index) => ( <>
-    <h1 key={index}> Question {index + 1} : {question.mainQuestion} </h1>
-    <div className="w-full px-4 flex   ">
-    <div className='flex flex-col'>
-    <h1 className='min-w-3/5 flex items-center gap-4 font-normal text-sm'> Your Answer : 
+<div className='w-full h-full     px-16  overflow-y-scroll '>
+   <h1 className='font-extrabold text-xl  text-theme my-6  m-auto w-full text-center mb-10 rounded-md sel'>Quiz Title :  {quiz?.quizTitle}</h1>
+   
+   {isQuizEnded &&  (
+ quiz?.quizQuestions .map((question, index) => ( <>
+    <h1 className='font-semibold text-lg text-theme my-4  underline' key={index}> Question {index + 1} : {question?.mainQuestion} </h1>
+    <div className="w-full px-4 flex  items-center justify-between bg-purple-50 p-4 rounded-md  ">
+    <div className='flex flex-col gap-2 '>
+    <h1 className='min-w-3/5 flex items-center gap-4 font-normal '> Your Answer : 
    <span className={`text-${
-                question.choices[answer[index]] === question.choices[question.correctAnswer] ? 'green-600' : 'red-500'
+                question.choices[userAnswers[index]] === question.choices[question.correctAnswer] ? 'green-600' : 'red-500'
               }`}>
-                {question.choices[answer[index]]}
+                {question.choices[userAnswers[index]]}
               </span></h1>
    <h1> The Correct Answer : {question.choices[question.correctAnswer]} </h1>
     </div>
    
     
    
-   <p>Points : {question.choices[answer[index]] === question.choices[question.correctAnswer] ? 10 : 0}</p>
+   <p>Points : {question.choices[userAnswers[index]] === question.choices[question.correctAnswer] ? 10 : 0}</p>
     
     </div>
     
     </>
 ))
    )}
-
-        <button onClick={()=>setIsResultPreview(false)} className='w-6 h-6 bg-theme text-white rounded-full absolute top-2 right-4'>X</button>
-      </div>)}
+  
+  
+    </div>
     </div>
   );
 }

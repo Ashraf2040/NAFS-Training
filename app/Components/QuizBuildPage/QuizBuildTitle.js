@@ -21,7 +21,7 @@ function QuizBuildTitle({ focusProp, onChangeQuizTitle, onSubjectChange, onGrade
   const [subject, setSubject] = useState('');
   const [grade, setGrade] = useState('');
   const [skill, setSkill] = useState('');
-  const skills=["Skill 1","Skill 2","Skill 3","Skill 4","Skill 5","Skill 2"]
+  const skills=["Skill 1","Skill 2","Skill 3","Skill 4","Skill 5"]
 
   function handleTextInputChange(text) {
     setQuizTitle(text);

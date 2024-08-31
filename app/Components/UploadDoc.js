@@ -82,7 +82,7 @@ const UploadDoc = () => {
       setError("");
     }
   };
-  const skills=["Skill 1","Skill 2","Skill 3","Skill 4","Skill 5","Skill 2"]
+  const skills=["Skill 1","Skill 2","Skill 3","Skill 4","Skill 5"]
 
   return (
     <div className="w-3/5 text-xl">

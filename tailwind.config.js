@@ -22,7 +22,7 @@ module.exports = {
         // theme: '#36626a',
         theme: '#4C3D8F',
         theme: '#246a73',
-        theme: '#4C3D8F',
+        theme: '#2E5266FF',
         // theme: 'black',
         themeGreen: '#4DB27B',
         themeYellow: '#f1d18a',

@@ -91,7 +91,7 @@ function QuizCard({ singleQuiz }) {
         {/* success rate area */}
         <div className="flex gap-1 items-center">
           {/* <Image src="/target-icon.png" width={20} height={10} alt="" /> */}
-          <Image src="/star.png" width={20} height={10} alt="" />
+          {/* <Image src="/star.png" width={20} height={10} alt="" /> */}
           <span className=" text-[12px] ">
             Success rate: {globalSuccessRate}%
           </span>

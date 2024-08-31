@@ -33,7 +33,7 @@ function Navbar(props) {
 
   return (
   
-      <div className="relative  md:px-8   mt-2 sm:flex sm:flex-col md:flex-row w-[95%] justify-between  text-theme   rounded-md mx-auto shadow-lg">
+      <div className="relative  md:px-8   mt-2 sm:flex sm:flex-col md:flex-row w-[95%] justify-between  text-theme   rounded-md mx-auto ">
       
         <div className=" items-center     sm:flex-col   md:flex-row justify-between  max-h-fit">
           <Link href="/" className="flex   md:gap-1 items-center  justify-around  ">

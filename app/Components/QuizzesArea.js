@@ -26,7 +26,7 @@ function QuizzesArea({ props }) {
   const { isLoading } = isLoadingObject;
   // console.log(isLoading);
   const {data:session}=useSession()
-  const skills=["Skill 1","Skill 2","Skill 3","Skill 4","Skill 5","Skill 2"]
+  const skills=["Skill 1","Skill 2","Skill 3","Skill 4","Skill 5"]
 
   useEffect(() => {
     const getStudentData = async () => {
