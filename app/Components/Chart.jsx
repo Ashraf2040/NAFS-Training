@@ -26,7 +26,7 @@ const Chart = ({code}) => {
    console.log(currentStudent)
    const trials=currentStudent?.quizzes.filter((trial,index)=> trial.index <=6)
  console.log(trials)
- const data1 = currentStudent?.quizzes.map((trial, index) => {
+ const data1 = currentStudent?.quizzes.slice(-5).map((trial, index) => {
     return { name: `Trial ${index + 1}`, Points: trial.score ,Max:trial.total};
   });
 

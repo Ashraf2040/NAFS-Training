@@ -33,7 +33,7 @@ function Navbar(props) {
 
   return (
   
-      <div className="relative  md:px-8   mt-2 sm:flex sm:flex-col md:flex-row w-[95%] justify-between  text-theme   rounded-md mx-auto ">
+      <div className="relative  md:px-8   mt-2 sm:flex sm:flex-col md:flex-row w-[95%] justify-between  text-theme    rounded-md mx-auto ">
       
         <div className=" items-center     sm:flex-col   md:flex-row justify-between  max-h-fit">
           <Link href="/" className="flex   md:gap-1 items-center  justify-around  ">
@@ -63,7 +63,7 @@ function Navbar(props) {
             )}
             {session ? (
               <button
-                className="block rounded-lg bg-theme px-2 py-2 text-sm font-semibold text-white transition focus:outline-none  w-4/5 md:w-fit"
+                className="block rounded-full bg-themeYellow px-2 py-2 text-sm font-semibold text-white transition focus:outline-none  w-4/5 md:w-fit"
                 type="button"
                 onClick={() => signOut()}
               >

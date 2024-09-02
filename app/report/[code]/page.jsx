@@ -70,7 +70,7 @@ const ReportPage = ({params}) => {
 <div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Grade :</h2> <span className='col-span-2 text-themeYellow'>{currentStudent?.grade}</span></div>
 <div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Test Attemps :</h2> <span className='col-span-2 text-themeYellow'>{trials}</span></div>
 <div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Score :</h2> <span className='col-span-2 text-themeYellow'>{score}</span></div>
-<div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Percentage :</h2> <span className='col-span-2 text-themeYellow'>{percentage} %</span></div>
+<div className='w-full grid grid-cols-3'><h2 className='col-span-1'>Percentage :</h2> <span className='col-span-2 text-themeYellow'>{Math.round(percentage)} %</span></div>
 </div>
 <div className='  h-full w-2/5 '><PieCharts  code={myCode}/></div>
 <div>

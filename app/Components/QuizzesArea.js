@@ -69,9 +69,8 @@ function QuizzesArea({ props }) {
     });
   };
  const quizzes=     filterQuizzes(allQuizzes, subject, grade,skill);
-
-
-
+    
+  console.log(students)
   return (
     <div className="poppins mx-12 mt-10 h-full  ">
       
@@ -170,7 +169,7 @@ function QuizzesArea({ props }) {
         <td className='col-span-2 text-center text-theme font-semibold  w-full '>{student.fullName}</td>
         <td className=' text-center text-theme font-semibold'>{student.quizzes.length}</td>
         <td className=' text-center text-theme font-semibold'>{student.quizzes.map((quiz)=>quiz.score).reduce((a, b) => a + b, 0)}</td>
-        <td className=' text-center text-theme font-semibold'>{student.quizzes?.map(quiz => quiz.percentage).reduce((a, b) => a + b, 0)/student.quizzes?.length} %</td>
+        <td className=' text-center text-theme font-semibold'>{Math.round(student.quizzes?.map(quiz => quiz.percentage).reduce((a, b) => a + b, 0)/student.quizzes?.length)} %</td>
         <td className={` text-center ${student.quizzes?.map(quiz => quiz.percentage).reduce((a, b) => a + b, 0)/student.quizzes?.length >= 65 ? "text-green-500" : "text-red-500"} font-semibold`}>{`${student.quizzes?.map(quiz => quiz.percentage).reduce((a, b) => a + b, 0)/student.quizzes?.length >= 65 ? "Passed" : "Failed"}`}</td>
         
        
