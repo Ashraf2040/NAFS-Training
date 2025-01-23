@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "@langchain/core/messages";
-
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 
@@ -18,15 +16,28 @@ export async function POST(req) {
     });
     const docs = await pdfLoader.load();
 
-    const selectedDocuments = docs.filter(
-      (doc) => doc.pageContent !== undefined
-    );
-    const texts = selectedDocuments.map((doc) => doc.pageContent);
+    // Separate the last two pages as a guide
+    const totalPages = docs.length;
+    const lastTwoPages = docs.slice(totalPages - 2, totalPages).map((doc) => doc.pageContent);
+    const questionTexts = docs.slice(0, totalPages - 2).map((doc) => doc.pageContent);
 
     const prompt = `
-    Given the following text, which may be in Arabic or English, generate a quiz based on the text. The quiz should be in the same language as the text. If the text already contains questions, use those questions directly to form the quiz. If the text does not contain questions, generate new questions based on the text. Return JSON only that contains a quiz object with fields: icon, quizTitle, id, and quizQuestions. The id should be unique and contain only alphanumeric characters. The quizQuestions is an array of objects with fields: id, mainQuestion, choices, correctAnswer, answeredResult (default -1), and statistics. The statistics is an object with fields: totalAttempts (default 0), correctAttempts (default 0), and incorrectAttempts (default 0).
+      Given the following text, which may be in Arabic or English, generate a quiz based on the text. 
+      The quiz should be in the same language as the text. 
+      use the title found in the first line as a quiz title.
+      If the text already contains questions, use those questions directly to form the quiz. 
+      If the text does not contain questions, generate new questions based on the text. 
+      Return JSON only that contains a quiz object with fields: icon, quizTitle, id, and quizQuestions. 
+      The id should be unique and contain only alphanumeric characters. 
+      The quizQuestions is an array of objects with fields: id, mainQuestion, choices, correctAnswer, answeredResult (default -1), and statistics. 
+      The statistics is an object with fields: totalAttempts (default 0), correctAttempts (default 0), and incorrectAttempts (default 0).
+
+      The last two pages contain the question numbers and their correct answers. Use them as a guide to answer the questions. 
+      The first part of the document contains the questions.
+      Here is the content:
+      Questions: ${questionTexts.join("\n")}
+      Answer Guide (from the last two pages): ${lastTwoPages.join("\n")}
     `;
-    
 
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
@@ -94,15 +105,12 @@ export async function POST(req) {
       content: [
         {
           type: "text",
-          text: prompt + "\n" + texts.join("\n"),
+          text: prompt,
         },
       ],
     });
 
     const result = await runnable.invoke([message]);
-    // console.log(result);
-
-    // const { quizzId } = await saveQuizz(result.quizz);
 
     return NextResponse.json({ result }, { status: 200 });
   } catch (e) {

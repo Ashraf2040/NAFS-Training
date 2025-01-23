@@ -1,5 +1,4 @@
-'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import QuizCard from './QuizCard';
 import PlaceHolder from './PlaceHolder';
 import useGlobalContextProvider from '../ContextApi';
@@ -7,27 +6,136 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import DropDown from './DropDown';
 import { useSession } from 'next-auth/react';
-import { connectToDB } from '@/libs/mongoDB';
 import Link from 'next/link';
 import Hero from './Hero';
-import { CloudCog } from 'lucide-react';
-import Hero2 from './Hero2';
+import ShowStatistics from './ShowStatistics';
 
 function QuizzesArea({ props }) {
-  const { allQuizzes, userObject, isLoadingObject } =
-    useGlobalContextProvider();
+  const { allQuizzes, userObject, isLoadingObject } = useGlobalContextProvider();
   const router = useRouter();
   const { user, setUser } = userObject;
-  const [students, setStudents] = useState([])
-  const [statShow, setStatShow] = useState(false)
-  const [subject, setSubject] = useState('Math')
-  const [grade, setGrade] = useState('3')
-  const [skill, setSkill] = useState('skill 1')
+  const [students, setStudents] = useState([]);
+  const [statShow, setStatShow] = useState(false);
+  const [subject, setSubject] = useState(''); // No default value
+  const [grade, setGrade] = useState(''); // No default value
+  const [skill, setSkill] = useState(''); // No default value
+  const [hoveredOutcome, setHoveredOutcome] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Track dropdown open state
   const { isLoading } = isLoadingObject;
-  // console.log(isLoading);
-  const {data:session}=useSession()
-  const skills=["Skill 1","Skill 2","Skill 3","Skill 4","Skill 5"]
-
+  const { data: session } = useSession();
+  const skills = [
+    {
+      grade: "3",
+      outcomes: [
+        {
+          subject: "English",
+          outcomes: [
+            "Vocabulary Acquisition and Use of Verbal Semantics",
+            "Reading Comprehension",
+          ],
+        },
+        {
+          subject: "Math",
+          outcomes: [
+            "Numbers and operations",
+            "Number sense and operations",
+            "Patterns, Relationships and Functions",
+            "Algebraic structures and mathematical expressions",
+            "Geometric shapes",
+            "Statistics and probabilities",
+          ],
+        },
+        {
+          subject: "Science",
+          outcomes: [
+            "Structure and function in living organisms",
+            "Organization and diversity of living organisms",
+            "Ecosystems and their interactions",
+            "Genetics",
+          ],
+        },
+      ],
+    },
+    {
+      grade: "6",
+      outcomes: [
+        {
+          subject: "English",
+          outcomes: [
+            "Vocabulary Acquisition and Use of Verbal Semantics",
+            "Reading Comprehension",
+          ],
+        },
+        {
+          subject: "Math",
+          outcomes: [
+            "Numbers and operations",
+            "Number sense and operations",
+            "Patterns, Relationships and Functions",
+            "Algebraic structures and mathematical expressions",
+            "Identifying 2D and 3D geometric shapes, classifying them based on their elementsproperties and creating accurate drawings of them.",
+            "Measurement and its units",
+            "Calculate Probabilities",
+          ],
+        },
+        {
+          subject: "Science",
+          outcomes: [
+            "Life Science",
+            "Matter and its interactions",
+            "Motion and Forces",
+            "Energy",
+            "waves and vibrations",
+            "Electromagnetism",
+            "The universe and the solar system",
+            "The Earth System",
+          ],
+        },
+      ],
+    },
+    {
+      grade: "9",
+      outcomes: [
+        {
+          subject: "English",
+          outcomes: [
+            "Vocabulary Acquisition and Use of Verbal Semantics",
+            "Reading Comprehension",
+          ],
+        },
+        {
+          subject: "Math",
+          outcomes: [
+            "Numbers and operations",
+            "Number sense and operations",
+            "Patterns, Relationships and Functions",
+            "Algebraic structures and mathematical expressions",
+            "Geometric shapes",
+            "Measurement and its units",
+            "Data analysis and interpretation",
+            "Calculating probabilities",
+          ],
+        },
+        {
+          subject: "Science",
+          outcomes: [
+            "Structure and function in living organisms",
+            "Organizing of living organisms and their diversity",
+            "Genetics",
+            "Matter and its interactions",
+            "Motion and Forces",
+            "Electromagnetism",
+            "Energy",
+            "Waves and vibrations",
+            "The universe and the solar system",
+            "Earth System",
+            "Land and human activity",
+          ],
+        },
+      ],
+    },
+  ];
+console.log(allQuizzes)
   useEffect(() => {
     const getStudentData = async () => {
       await fetch('/api/user/getUsers', {
@@ -38,157 +146,175 @@ function QuizzesArea({ props }) {
       })
         .then((response) => response.json())
         .then((data) => {
-          
-         console.log(data)
           setStudents(data);
         })
         .catch((error) => {
           console.error(error);
         });
     };
- 
-              getStudentData();
+
+    getStudentData();
   }, [setStudents]);
-  
-   const currentStudent = students?.find(student => student.code === session?.user?.code)
 
-   console.log(currentStudent)
-  // const studentScores =studentQuizzes?.map(quiz => quiz.score)
-  // const studentPercentages =studentQuizzes?.map(quiz => quiz.percentage)
-  // const percentage= studentQuizzes?.map(quiz => quiz.percentage).reduce((a, b) => a + b, 0)/studentQuizzes?.length
+  const currentStudent = students?.find(student => student.code === session?.user?.code);
 
-  // const totalScore = studentScores.reduce((acc, curr) => acc + curr, 0);
-
-  // console.log(studentScores)
-
-       
-
-  const filterQuizzes = (quizzes, subject, grade,skill) => {
+  const filterQuizzes = (quizzes, subject, grade, skill) => {
     return quizzes.filter(quiz => {
       return quiz.subject === subject && quiz.grade === grade && quiz.skill === skill;
     });
   };
- const quizzes=     filterQuizzes(allQuizzes, subject, grade,skill);
-    
-  console.log(students)
+
+  const quizzes = filterQuizzes(allQuizzes, subject, grade, skill);
+  const filteredOutcomes = skills
+    .find((skill) => skill.grade === grade)
+    ?.outcomes.find((outcome) => outcome.subject === subject)?.outcomes || [];
+console.log(quizzes)
+  // Close the modal when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (hoveredOutcome && !event.target.closest('.modal-content')) {
+        setHoveredOutcome(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [hoveredOutcome]);
+
   return (
-    <div className="poppins mx-12 mt-10 h-full  ">
-      
+    <div className="poppins mx-12 mt-10 h-full">
       <div>
         {isLoading ? (
           <div></div>
         ) : user.isLogged ? (
           <>
-          <Hero />
+            <Hero />
             {allQuizzes.length === 0 ? (
               <PlaceHolder />
             ) : (
               <div className=''>
+                <h1 className='text-xl font-bold flex gap-2 text-theme px-4 rounded-md py-2 max-w-fit items-center'>
+                  Choose Your Quiz <span><Image src="/arrow1.svg" alt='' width={20} height={20} /></span>
+                </h1>
                 <DropDown />
-                <div className=' px-4 my-6 py-3 mx-auto rounded-md bg-theme font-bold text-white flex items-center justify-between '>
-                  <h1 className='flex items-center gap-2'>Choose Your Quiz  <span><Image src="/arrow1.svg" alt='' width={20} height={20} /></span></h1>
-                 <div> <span className='mr-2'>Subject :</span>
-                  <select name="subject" id="" className='text-theme px-2 rounded-md'onChange={(e)=>setSubject(e.target.value)} >
-                    <option value="Math" >Math</option>
-                    <option value="English">English</option>
-                    <option value="Science">Science</option>
-                    
-                  </select></div>
-                 <div> <span
-                 className='mr-2'>Grade :</span>
-                  <select name="subject" id="" className='text-theme px-2 rounded-md' onChange={(e)=>setGrade(e.target.value)}>
-                    <option value="3">3</option>
-                    <option value="6">6</option>
-                    <option value="9">9</option>
-                    
-                  </select></div>
-                 <div> <span
-                 className='mr-2'>Skill :</span>
-                  <select name="subject" id="" className='text-theme px-2 rounded-md' onChange={(e)=>setSkill(e.target.value)}>
-                 { skills.map((skill)=> <option value={skill.toLocaleLowerCase()} key={skill.toLocaleLowerCase()}>{skill}</option>)}
-                  
-                    
-                  </select></div>
+                <div className='px-4 my-6 py-3  rounded-md font-bold text-white flex flex-col md:gap-0 gap-6   justify-between md:flex-row bg-theme'>
+                  <div className='w-full md:max-w-fit text-center'>
+                    <span className='mr-2'>Subject :</span>
+                    <select
+                      name="subject"
+                      className="text-theme px-2 rounded-md"
+                      onChange={(e) => setSubject(e.target.value)}
+                      value={subject}
+                    >
+                      <option value="">Select Subject</option> {/* Placeholder option */}
+                      <option value="Math">Math</option>
+                      <option value="English">English</option>
+                      <option value="Science">Science</option>
+                    </select>
+                  </div >
+                  <div  className='w-full md:max-w-fit text-center'>
+                    <span className='mr-2'>Grade :</span>
+                    <select
+                      name="grade"
+                      className="text-theme px-2 rounded-md"
+                      onChange={(e) => setGrade(e.target.value)}
+                      value={grade}
+                    >
+                      <option value="">Select Grade</option> {/* Placeholder option */}
+                      <option value="3">3</option>
+                      <option value="6">6</option>
+                      <option value="9">9</option>
+                    </select>
+                  </div>
+                  <div className="relative w-full md:max-w-fit text-center items-center flex">
+                    <button
+                      className="text-white px-2 rounded-md flex items-center gap-1"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      disabled={!subject || !grade} // Disable if subject or grade is not selected
+                    >
+                      {skill || 'Select Outcome'} <span className="text-sm ml-2">▼</span> {/* Arrow down icon */}
+                    </button>
+                    {isDropdownOpen && (
+                      <ul
+                        className="absolute top-10 left-0 z-10 bg-themeYellow border border-gray-200 rounded-md w-48 max-h-60 overflow-y-auto shadow-lg"
+                        onMouseLeave={() => setIsDropdownOpen(false)} // Close dropdown on mouse leave
+                      >
+                        {filteredOutcomes.map((outcome, index) => (
+                          <li
+                            key={index}
+                            className="p-2 text-center hover:bg-theme border-b-2 border-theme cursor-pointer"
+                            onClick={() => {
+                              setSkill(outcome);
+                              setIsDropdownOpen(false);
+                            }}
+                            onMouseEnter={() => setHoveredOutcome(outcome)} // Set hovered outcome
+                            onMouseLeave={() => setHoveredOutcome(null)} // Clear hovered outcome
+                          >
+                            Domain {index + 1}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
-                <h2 className="text-xl font-bold flex gap-2 text-theme px-4 rounded-md py-2 max-w-fit items-center"> <span><Image src='/earth.svg' width={30} height={30} alt="" /></span>My Quizzes ...</h2>
+
+                {hoveredOutcome && (
+                  <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-md modal-content">
+                      <h3 className="text-lg font-bold text-theme mb-4">Outcome Details</h3>
+                      <p className="text-gray-700">{hoveredOutcome}</p>
+                     
+                    </div>
+                  </div>
+                )}
+
+              <div className='flex items-center justify-between'>
+              <h2 className="text-xl font-bold flex gap-2 text-theme px-4 rounded-md py-2 max-w-fit items-center">
+                  <span><Image src='/earth.svg' width={30} height={30} alt="" /></span>My Quizzes ...
+                </h2>
+                <button onClick={() => router.push('/quizzes-manage')} className='text-lg font-bold flex gap-2 text-theme px-4 rounded-md py-2 max-w-fit items-center'>Quizzes Management</button>
+              </div>
                 <div className="mt-6 flex gap-2 flex-wrap">
-                  <div className="flex gap-2 flex-wrap items-center  ">
+                  <div className="flex gap-2 flex-wrap items-center">
                     {quizzes.map((singleQuiz, quizIndex) => (
                       <div key={quizIndex} className='flex-grow md:flex-grow-0'>
                         <QuizCard singleQuiz={singleQuiz} />
                       </div>
                     ))}
-                    {session && session.user.role === 'AD' &&
-                    <div
-                    onClick={() => router.push('/quiz-build')}
-                    className=" cursor-pointer justify-center items-center rounded-[10px]
-                   w-[230px] flex flex-col gap-2 border border-gray-100 bg-white p-4"
-                  >
-                    <Image
-                      src={'/add-quiz.png'}
-                      width={160}
-                      height={160}
-                      alt=""
-                    />
-                    <span className="select-none opacity-40">
-                      Add a new Quiz
-                    </span>
-                  </div>}
+                    {session && session.user.role === 'AD' && (
+                      <div
+                        onClick={() => router.push('/quiz-build')}
+                        className="cursor-pointer justify-center items-center rounded-[10px] w-[230px] flex flex-col gap-2 border border-gray-100 bg-white p-4"
+                      >
+                        <Image src={'/add-quiz.png'} width={160} height={160} alt="" />
+                        <span className="select-none opacity-40">Add a new Quiz</span>
+                      </div>
+                    )}
                   </div>
-                  
-                  
                 </div>
-                <button className="text-xl font-bold flex gap-2  text-theme px-4 rounded-md mt-8 py-2 max-w-fit" onClick={() => setStatShow(!statShow)}> <span><Image src={'/statistics.svg'} width={20} height={20} alt="" /></span>Statistics ...</button>
+                <button
+                  className="text-xl font-bold flex gap-2 text-theme px-4 rounded-md mt-8 py-2 max-w-fit"
+                  onClick={() => setStatShow(!statShow)}
+                >
+                  <span><Image src={'/statistics.svg'} width={20} height={20} alt="" /></span>Statistics ...
+                </button>
 
-             { statShow &&
-               <div className="statistcs w-full mt-4 bg-theme h-full rounded-[4px]">
-<table className='w-full  flex flex-col px-1  '>
-  <th className='text-center '>
-    <tr className='text-white grid grid-cols-9  py-1 '>
-    <td className=' mx-auto'>Code</td>
-    <td className='col-span-1 '>Grade</td>
-    <td className='col-span-2   w-full text-center'>Name</td>
-    <td className=' mx-auto'>No Of Trials</td>
-    <td className='text-center mx-auto'> Score</td>
-    <td className='text-center mx-auto'>
-      percentage
-    </td>
-    <td className='text-center mx-auto'>Progress</td>
-  
-    <td className='text-center mx-auto'>Report</td>
-    
-    </tr>
-    
-  </th>
+                {statShow && (
 
- 
-    {students.map((student, index) => (
-      <tr key={index} className='bg-white w-full grid grid-cols-9 py-1    font-normal mb-2'>
-        <td className=' text-center font-semibold text-red-500'>{student.code}</td>
-        <td className=' text-center font-semibold text-theme'>{student.grade}</td>
-        <td className='col-span-2 text-center text-theme font-semibold  w-full '>{student.fullName}</td>
-        <td className=' text-center text-theme font-semibold'>{student.quizzes.length}</td>
-        <td className=' text-center text-theme font-semibold'>{student.quizzes.map((quiz)=>quiz.score).reduce((a, b) => a + b, 0)}</td>
-        <td className=' text-center text-theme font-semibold'>{Math.round(student.quizzes?.map(quiz => quiz.percentage).reduce((a, b) => a + b, 0)/student.quizzes?.length)} %</td>
-        <td className={` text-center ${student.quizzes?.map(quiz => quiz.percentage).reduce((a, b) => a + b, 0)/student.quizzes?.length >= 65 ? "text-green-500" : "text-red-500"} font-semibold`}>{`${student.quizzes?.map(quiz => quiz.percentage).reduce((a, b) => a + b, 0)/student.quizzes?.length >= 65 ? "Passed" : "Failed"}`}</td>
-        
-       
-        <td className=' text-center underline text-themeYellow font-semibold '><Link href={`/report/${student.code}`}>Report</Link></td>
-      </tr>
-    ))}
-   
-  
-</table>
-                </div>}
+                  <ShowStatistics  />
+                  
+                )}
               </div>
             )}
           </>
         ) : (
-          <div className="  h-96 flex flex-col text-2xl gap-4 justify-center items-center">
-            <h2 className="font-bold md:text-5xl  text-themeYellow">
-            <span className="text-theme">NAFS</span>  Training Platform 
+          <div className="h-96 flex flex-col text-2xl gap-4 justify-center items-center">
+            <h2 className="font-bold md:text-5xl text-themeYellow">
+              <span className="text-theme">NAFS</span> Training Platform
             </h2>
-            <span className="text-xl font-semibold text-center ">
+            <span className="text-xl font-semibold text-center">
               Unlock Your Potential with Personalized Quizzes
             </span>
             <button

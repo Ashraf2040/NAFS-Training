@@ -1,58 +1,63 @@
-import { connectToDB } from "@/libs/mongoDB";
-import { NextResponse } from "next/server";
-// import SignIn from "next-auth"
-// // import bcrypt from "bcryptjs"
+import { PrismaClient } from '@prisma/client';
+import { NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
 
-import User from "@/app/models/UserSchema";
-
-connectToDB();
+const prisma = new PrismaClient();
 
 export const POST = async (req) => {
   try {
-    const reqBody = await req.json();
-    const { email, password } = reqBody;
+    const { email, password } = await req.json();
+    console.log(email, password);
 
-    const user = await User.findOne({ email });
-    // console.log(user);
+    // Find the user by email
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
     if (!user) {
       return NextResponse.json(
-        { message: "THe user is not exist" },
+        { message: 'The user does not exist' },
         { status: 400 }
       );
     }
 
-    //  check the password//
-    if (user.password !== password) {
+    // Compare the provided password with the plain-text password in the database
+    if (password !== user.password) {
       return NextResponse.json(
-        { message: "passwords dont match" },
-        { status: 500 }
+        { message: 'Invalid password' },
+        { status: 400 }
       );
     }
 
-    // Create token data //
+    // Create token data
     const tokenData = {
-      id: user._id,
+      id: user.id,
       email: user.email,
-      fullname: user.fullname,
-      code:user.code,
-      score:user.score,
-      role:user.role
+      fullName: user.fullName,
+      code: user.code,
+      score: user.score,
+      role: user.role,
     };
 
-    // Create token //
-
+    // Create token
     const token = jwt.sign(tokenData, process.env.NEXT_SECRET, {
-      expiresIn: "360s",
+      expiresIn: '360s',
     });
 
     const response = NextResponse.json({
-      message: "Loging successful",
+      message: 'Login successful',
       success: true,
     });
 
-    response.cookies.set("token", token, { httpOnly: true });
+    // Set the token in cookies
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+
     return response;
   } catch (error) {
-    return NextResponse.json({ message: "The user not found" });
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 };

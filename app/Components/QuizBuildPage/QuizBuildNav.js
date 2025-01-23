@@ -2,17 +2,17 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import useGlobalContextProvider from '@/app/ContextApi';
+import useGlobalContextProvider from './../../ContextApi';
 import { v4 as uuidv4 } from 'uuid';
 import { faCode } from '@fortawesome/free-solid-svg-icons';
 
 import { useRouter } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
-import convertFromFaToText from '@/app/convertFromFaToText';
+import convertFromFaToText from './../../convertFromFaToText';
 import { icon } from '@fortawesome/fontawesome-svg-core';
 import Link from 'next/link';
 import { useDispatch, useSelector } from 'react-redux';
-import { restQuizAssets, setQuizAssets } from '@/app/reducers/questionSlice';
+import { restQuizAssets, setQuizAssets } from './../../reducers/questionSlice';
 
 function validateQuizQuestions(quizQuestions) {
   for (let question of quizQuestions) {

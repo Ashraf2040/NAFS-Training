@@ -13,19 +13,19 @@ import useGlobalContextProvider from '../ContextApi';
 import { icon } from '@fortawesome/fontawesome-svg-core';
 import convertToFaIcons from '../convertToFaIcons';
 
-function successRate(singleQuiz) {
-  let correctQuestions = 0;
-  let totalAttemptes = 0;
-  let successRate = 0;
+// function successRate(singleQuiz) {
+//   let correctQuestions = 0;
+//   let totalAttemptes = 0;
+//   let successRate = 0;
 
-  singleQuiz.quizQuestions.forEach((question) => {
-    totalAttemptes += question.statistics.totalAttempts;
-    correctQuestions += question.statistics.correctAttempts;
-  });
+//   singleQuiz.quizQuestions.forEach((question) => {
+//     totalAttemptes += question.statistics.totalAttempts;
+//     correctQuestions += question.statistics.correctAttempts;
+//   });
 
-  successRate = Math.ceil((correctQuestions / totalAttemptes) * 100);
-  return successRate;
-}
+//   successRate = Math.ceil((correctQuestions / totalAttemptes) * 100);
+//   return successRate;
+// }
 
 function QuizCard({ singleQuiz }) {
   const {
@@ -43,7 +43,7 @@ function QuizCard({ singleQuiz }) {
   const { quizTitle, quizQuestions, icon } = singleQuiz;
 
   const totalQuestions = quizQuestions.length;
-  const globalSuccessRate = successRate(singleQuiz);
+  // const globalSuccessRate = successRate(singleQuiz);
   //
 
   function openDropDownMenu(event) {
@@ -92,9 +92,7 @@ function QuizCard({ singleQuiz }) {
         <div className="flex gap-1 items-center">
           {/* <Image src="/target-icon.png" width={20} height={10} alt="" /> */}
           {/* <Image src="/star.png" width={20} height={10} alt="" /> */}
-          <span className=" text-[12px] ">
-            Success rate: {globalSuccessRate}%
-          </span>
+        
         </div>
         <div
           onClick={() => {

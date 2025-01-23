@@ -71,7 +71,7 @@ function Choices({
                   questionIndex,
                 );
               }}
-              className="border text-[13px]  border-gray-200 p-2 w-full rounded-md outline-none pr-10"
+              className="border text-[13px]  border-gray-200 p-2 w-full rounded-md outline-none pr-10 bg-transparent"
               placeholder={`Add Your ${positions[choiceIndex]} Choice`}
             />
             {choiceIndex >= 2 && (

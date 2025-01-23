@@ -33,15 +33,15 @@ function Navbar(props) {
 
   return (
   
-      <div className="relative  md:px-8   mt-2 sm:flex sm:flex-col md:flex-row w-[95%] justify-between  text-theme    rounded-md mx-auto ">
+      <div className="relative  md:px-8 shadow-md  pt-4 sm:flex sm:flex-col md:flex-row  justify-between  text-theme    rounded-md mx-auto ">
       
         <div className=" items-center     sm:flex-col   md:flex-row justify-between  max-h-fit">
           <Link href="/" className="flex   md:gap-1 items-center  justify-around  ">
             <Image
               src="/hero-img.svg"
               alt=""
-              width={120}
-              height={100}
+              width={90}
+              height={90}
              
             />
           
@@ -49,7 +49,7 @@ function Navbar(props) {
           
         </div>
         <div className='flex justify-center bg-red-400~'>
-          <Image src="/63030330.png" alt="" width={150} height={50} />
+          
         </div>
        
         <div className="mt-4 flex flex-col gap-4 sm:mt-0 sm:flex-row sm:items-center">

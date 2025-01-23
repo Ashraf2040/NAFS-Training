@@ -3,7 +3,7 @@
 import React from 'react';
 import { faCode, faStopwatch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import useGlobalContextProvider from '@/app/ContextApi';
+import useGlobalContextProvider from './../../ContextApi';
 
 function QuizStartHeader({ parentTimer }) {
   const { quizToStartObject } = useGlobalContextProvider();

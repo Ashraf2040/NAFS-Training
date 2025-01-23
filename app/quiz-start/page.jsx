@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import useGlobalContextProvider from '@/app/ContextApi';
+import useGlobalContextProvider from './../ContextApi';
 import QuizStartHeader from '../Components/QuizStartPage/QuizStartHeader';
 import QuizStartQuestions from '../Components/QuizStartPage/QuizStartQuestions';
 import { useRouter } from 'next/navigation';

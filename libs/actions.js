@@ -1,11 +1,24 @@
-"use server"
+import { PrismaClient } from '@prisma/client';
 
-import { connectToDB } from "./mongoDB"
-import User from "@/app/models/UserSchema";
+const prisma = new PrismaClient();
 
-export const getUser = async (req) => {
-  await   connectToDB()
-    const users = await User.find({req})
-    return users
+export const  getStudentsWithQuizzes = async ()=> {
+  const students = await prisma.user.findMany({
+    where: {
+      role: 'ST', // Filter by role = "ST"
+    },
+    include: {
+      quizzes: {
+        include: {
+          quiz: {
+            include: {
+              quizQuestions: true, // Include quizQuestions in the quiz details
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return students;
 }
-

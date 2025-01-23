@@ -18,7 +18,7 @@ import IconsComponents from './IconsComponents';
 import axios from 'axios';
 import Image from 'next/image';
 import { useDispatch, useSelector } from 'react-redux';
-import { setQuizAssets } from '@/app/reducers/questionSlice';
+import { setQuizAssets } from './../../reducers/questionSlice';
 
 // import {Image} from "cloudinary-react"
 function QuizBuildQuestions({ focusProp, quizQuestions, setQuizQuestions }) {
@@ -337,7 +337,7 @@ const SingleQuestion = forwardRef(function SingleQuestion(
   return (
     <div className="w-full  mr-5 mt-3">
       <div className='w-full flex items-center justify-around gap-4 my-4'>
-      <input  type='file' onChange={(e)=>setImageSelected(e.target.files[0])} className='w-1/5 '/>
+      <input  type='file' onChange={(e)=>setImageSelected(e.target.files[0])} className='w-1/5 bg-transparent '/>
       <button onClick={uploadImage} className='bg-theme p-2 rounded-md text-white '>Upload</button>
       </div>
 {imageReturned&&
@@ -355,7 +355,7 @@ const SingleQuestion = forwardRef(function SingleQuestion(
           <span>{questionIndex + 1}</span>
         </div>
         <textarea
-          className="border border-gray-200 rounded-md p-3 ml-3 w-full h-[50px] resize-none 
+          className="border bg-transparent border-gray-200 rounded-md p-3 ml-3 w-full h-[50px] resize-none 
             text-[13px] outline-none"
           placeholder="Your Question Here..."
           value={value}

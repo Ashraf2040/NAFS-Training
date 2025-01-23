@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Quiz {
+  id            String     @id @default(cuid())
+  grade         String
+  subject       String
+  skill         String
+  icon          String? @default("faQuestion")
+  quizTitle     String
+  quizQuestions Question[]
+  quizAssets    String[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  users         UserQuiz[]
+ 
+}
+
+model Question {
+  id              String  @id @default(cuid())
+  mainQuestion    String
+  choices         String[]
+  correctAnswer   Int
+  answeredResult  Int      @default(-1)
+  statistics      Json?
+  quizId          String
+  quiz            Quiz     @relation(fields: [quizId], references: [id])
+}
+
+model User {
+  id        String    @id @default(cuid())
+  fullName  String
+  email     String    @unique
+  password  String
+  role      String
+  code      Int       @unique
+  trials    String[]  @default([])
+  score     Int       @default(0)
+  grade     String
+  quizzes   UserQuiz[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model UserQuiz {
+  id          String   @id @default(cuid()) // Add an ID field for unique identification
+  userId      String
+  quizId      String
+  score       Int
+  userAnswers Json     // Store user answers as JSON
+  trialNumber Int      // Track the trial number
+  dueDate     DateTime // Due date for the quiz (15 days after assignment)
+  status      String   @default("ASSIGNED") // "ASSIGNED", "COMPLETED"
+  user        User     @relation(fields: [userId], references: [id])
+  quiz        Quiz     @relation(fields: [quizId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, quizId, trialNumber]) // Ensure uniqueness for each trial
+}

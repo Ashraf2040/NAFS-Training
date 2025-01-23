@@ -1,71 +1,87 @@
-import Quiz from "@/app/models/QuizSchema";
-import { connectToDB } from "@/libs/mongoDB";
-import { NextResponse } from "next/server";
+import { PrismaClient } from '@prisma/client';
+import { NextResponse } from 'next/server';
 
+const prisma = new PrismaClient();
+
+// Create a new quiz
 export async function POST(request) {
-  await connectToDB();
-  const { quizTitle, icon, quizQuestions,_id,quizAssets,
-
- grade,subject,skill } = await request.json();
-  const newQuiz = await Quiz.create({ quizTitle, icon, quizQuestions ,_id,quizAssets ,grade,subject,skill
-
-  });
-
   try {
+    const { quizTitle, icon, quizQuestions, _id, quizAssets, grade, subject, skill } = await request.json();
+
+    const newQuiz = await prisma.quiz.create({
+      data: {
+        id: _id, // Use _id as the custom ID
+        quizTitle,
+        icon,
+        quizQuestions: {
+          create: quizQuestions, // Create nested quizQuestions
+        },
+        quizAssets,
+        grade,
+        subject,
+        skill,
+      },
+    });
+
     return NextResponse.json({
-      id: newQuiz._id,
-  
-      message: "The quiz has been created successfully.",
+      id: newQuiz.id,
+      message: 'The quiz has been created successfully.',
     });
   } catch (error) {
-    return NextResponse.json({ message: error });
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
 
+// Fetch all quizzes
 export async function GET() {
-  await connectToDB();
-  const quizzes = await Quiz.find();
   try {
+    const quizzes = await prisma.quiz.findMany({
+      include: { quizQuestions: true }, // Include nested quizQuestions
+    });
+
     return NextResponse.json({ quizzes });
   } catch (error) {
-    return NextResponse.json({ message: error });
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
 
+// Update a quiz
 export async function PUT(request) {
   try {
-    const id = request.nextUrl.searchParams.get("id");
-    let quizToUpdate = await Quiz.findById(id);
-
+    const id = request.nextUrl.searchParams.get('id');
     const { updateQuiz, updateQuizQuestions } = await request.json();
-    
-    // Update properties of quizToUpdate
-    if (updateQuiz) {
-      quizToUpdate.icon = updateQuiz.icon;
-      quizToUpdate.quizTitle = updateQuiz.quizTitle;
-      quizToUpdate.quizQuestions = updateQuiz.quizQuestions;
-    }
 
-    if (updateQuizQuestions) {
-      quizToUpdate.quizQuestions = updateQuizQuestions;
-    }
+    const updatedQuiz = await prisma.quiz.update({
+      where: { id },
+      data: {
+        icon: updateQuiz?.icon,
+        quizTitle: updateQuiz?.quizTitle,
+        quizQuestions: updateQuizQuestions
+          ? {
+              deleteMany: {}, // Delete existing quizQuestions
+              create: updateQuizQuestions, // Create new quizQuestions
+            }
+          : undefined,
+      },
+    });
 
-    await quizToUpdate.save();
-    return NextResponse.json({ message: "success" });
+    return NextResponse.json({ message: 'Quiz updated successfully', quiz: updatedQuiz });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json({ message: error.message });
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
 
+// Delete a quiz
 export async function DELETE(request) {
   try {
-    const id = request.nextUrl.searchParams.get("id");
-    await connectToDB();
-    await Quiz.findByIdAndDelete(id);
-    return NextResponse.json({ message: "quiz deleted" });
+    const id = request.nextUrl.searchParams.get('id');
+
+    await prisma.quiz.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ message: 'Quiz deleted successfully' });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json({ message: error.message });
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }

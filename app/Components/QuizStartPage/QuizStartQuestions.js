@@ -1,358 +1,151 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import useGlobalContextProvider from '@/app/ContextApi';
+import useGlobalContextProvider from './../../ContextApi'
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation'; // Import the router
+import { IoClose } from 'react-icons/io5';
 import toast, { Toaster } from 'react-hot-toast';
-import convertFromFaToText from '@/app/convertFromFaToText';
 import { useSession } from 'next-auth/react';
-import Certificate from '../Certificate';
-import { setUserScore } from '@/app/reducers/userSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import { revalidatePath } from 'next/cache';
-import { setAnswers } from '@/app/reducers/answersSlice';
-import Link from 'next/link';
-import { CloudCog } from 'lucide-react';
+// import { setUserScore, addQuizResult } from '@/app/reducers/userSlice';
+// import { revalidatePath } from 'next/cache';
 
 function QuizStartQuestions({ onUpdateTime }) {
+  const { quizToStartObject, allQuizzes, setAllQuizzes } = useGlobalContextProvider();
+  const { selectQuizToStart } = quizToStartObject;
+  const { quizQuestions } = selectQuizToStart;
+
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedChoice, setSelectedChoice] = useState(null);
+  const [userAnswers, setUserAnswers] = useState(Array(quizQuestions.length).fill(-1));
+  const [isQuizEnded, setIsQuizEnded] = useState(false);
   const [score, setScore] = useState(0);
-  const [images,setImages]=useState([]);
-  const dispatch=useDispatch();
-  const {data:session} = useSession();
+  const [images, setImages] = useState([]);
+
+  const dispatch = useDispatch();
+  const { data: session } = useSession();
   const code = session?.user?.code;
-  const currentUser =useSelector((state)=>state.user)
-  const [userAnswers, setUserAnswers] = useState([]);
-  const [quiz, setQuiz] = useState([]);
-//  console.log("object code",code) 
-//  console.log("object score",score) 
 
-
-  async function updateUserInformation() {
-    if (!session || !score) {
-      return; // Handle missing session or score
-    }
-  
-     // Extract user ID from session
-      
+  useEffect(() => {
+    fetchQuizAssets();
+  }, [selectQuizToStart._id]);
+  const handleCloseScoreComponent = () => {
+    setIsQuizEnded(false); // Hide the ScoreComponent
+  };
+  const fetchQuizAssets = async () => {
     try {
-      function calculateScore(arrayA, arrayB) {
-      let questionsScore = 0;
-      for (let i = 0; i < arrayA.length; i++) {
-        if (arrayA[i] === arrayB[i]) {
-          questionsScore += 10;
-        }
-      }
-      return questionsScore;
+      const res = await fetch(`/api/quizzes?id=${selectQuizToStart._id}`);
+      const data = await res.json();
+      const currentQuiz = data.quizzes.find(quiz => quiz._id === selectQuizToStart._id);
+      setImages(currentQuiz.quizAssets);
+    } catch (error) {
+      console.error(error);
     }
-    const orignalAnswer =[]
-    for (let i = 0; i < quizQuestions.length; i++) {
-      orignalAnswer.push(quiz.quizQuestions[i].correctAnswer);
+  };
+
+  const handleAnswerSelection = (choiceIndex) => {
+    setSelectedChoice(choiceIndex);
+    const newAnswers = [...userAnswers];
+    newAnswers[currentQuestionIndex] = choiceIndex;
+    setUserAnswers(newAnswers);
+  };
+
+  const moveToNextQuestion = () => {
+    if (selectedChoice === null) {
+      toast.error('Please select an answer');
+      return;
     }
-    
-    const currentQuestionScore = calculateScore(orignalAnswer, userAnswers)
-    console.log(currentQuestionScore)
-      const res = await fetch('/api/user', {
+
+    const isCorrect = selectedChoice === quizQuestions[currentQuestionIndex].correctAnswer;
+    if (isCorrect) {
+      setScore(prev => prev + 10);
+      toast.success('Correct Answer!');
+    } else {
+      toast.error('Incorrect Answer!');
+    }
+
+    if (currentQuestionIndex < quizQuestions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setSelectedChoice(null);
+    } else {
+      setIsQuizEnded(true);
+      saveQuizResults();
+    }
+  };
+
+  const saveQuizResults = async () => {
+    const correctAnswers = quizQuestions.map(question => question.correctAnswer);
+    const correctCount = userAnswers.filter((answer, index) => answer === correctAnswers[index]).length;
+    const totalScore = correctCount * 10;
+  
+    try {
+      const res = await fetch('/api/user/quizSubmisiion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           code,
-        
-          quiz:{...quiz,userAnswers,score:currentQuestionScore ,total:orignalAnswer.length*10 ,percentage:( Math.round((currentQuestionScore/orignalAnswer.length*10) ))} // Update data object
+          quiz: {
+            _id: selectQuizToStart.id, // Quiz ID
+            score: totalScore, // User's score for this quiz
+            userAnswers, // User's answers
+          },
+          totalScore: totalScore, // Pass the total score to update the user's overall score
         }),
       });
   
       const data = await res.json();
-      // console.log(data.message); // Log response message
-     revalidatePath("/")
-      // Handle successful or failed update based on response
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-
-  console.log(userAnswers)
-  console.log(quiz)
-  
-  
-  
-  // const time = 30;
-  const { quizToStartObject, allQuizzes, setAllQuizzes, userObject } =
-    useGlobalContextProvider();
-    // console.log(userObject)
-  const { selectQuizToStart } = quizToStartObject;
-  const { quizQuestions } = selectQuizToStart;
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedChoice, setSelectedChoice] = useState(null);
-  const [indexOfQuizSelected, setIndexOfQuizSelected] = useState(null);
-  const [isQuizEnded, setIsQuizEnded] = useState(false);
-
- 
-  async function saveDataIntoDB() {
-    try {
-      const id = selectQuizToStart._id;
-      // Get the _id of the quiz
-      const res = await fetch(
-        `http://localhost:3000/api/quizzes?id=${id}`, // Include the id as a query parameter
-        {
-          method: 'PUT',
-          headers: {
-            'Content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            updateQuizQuestions: allQuizzes[indexOfQuizSelected].quizQuestions,
-          }),
-        },
-      );
-      // console.log(allQuizzes[indexOfQuizSelected].quizQuestions);
-      if (!res.ok) {
-        toast.error('Something went wrong while saving...');
-        return;
-      }else{
-        revalidatePath("/")
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
- 
-  useEffect(() => {
-    const quizIndexFound = allQuizzes.findIndex(
-      (quiz) => quiz._id === selectQuizToStart._id,
-    );
-    setIndexOfQuizSelected(quizIndexFound);
-  }, [allQuizzes, selectQuizToStart._id]);
-
-  useEffect(() => {
-    if (isQuizEnded) {
-      // renitialize all answers to -1
-      quizQuestions.forEach((quizQuestion) => {
-        quizQuestion.answeredResult = -1;
-      });
-      saveDataIntoDB();
-      // dispatch(setUserScore(50));
-      updateUserInformation();
-    }
-  }, [isQuizEnded, quizQuestions, saveDataIntoDB, updateUserInformation]);
-
-  function selectChoiceFunction(choiceIndexClicked) {
-    // update the selectedChoice variable state
-    setSelectedChoice(choiceIndexClicked);
-    //---------------------------------------
-   
-    //We update the answerResult proprety in the allQuizzes array
-    const currentAllQuizzes = [...allQuizzes];
-    localStorage.setItem("quiz", JSON.stringify(allQuizzes[indexOfQuizSelected]));
-    setQuiz(allQuizzes[indexOfQuizSelected])
-    currentAllQuizzes[indexOfQuizSelected].quizQuestions[
-      currentQuestionIndex
-    ].answeredResult = choiceIndexClicked;
-    const newAnswers = [...userAnswers];
-    newAnswers[currentQuestionIndex] = choiceIndexClicked;
-    setUserAnswers(newAnswers);
-    dispatch(setAnswers(userAnswers))
-    localStorage.setItem("answers", JSON.stringify(newAnswers));
-    
-    setAllQuizzes(currentAllQuizzes);
-    console.log(currentAllQuizzes)
-  }
- 
-  // if(isQuizEnded){
-  //   dispatch(setAnswers(userAnswers))
-  // }
-
-  
-  
-  function moveToTheNextQuestion() {
-    // Check if the we did select the an answer by using the answerResult proprety if
-    //it's still equal to -1
-    if (
-      allQuizzes[indexOfQuizSelected].quizQuestions[currentQuestionIndex]
-        .answeredResult === -1
-    ) {
-      toast.error('please select an answer');
-      return;
-    }
-
-    // Update the statistics of the question
-    // ======================================
-    // update the total Attemptes:
-    allQuizzes[indexOfQuizSelected].quizQuestions[
-      currentQuestionIndex
-    ].statistics.totalAttempts += 1;
-
-    // if the answer is incorrect
-    if (
-      allQuizzes[indexOfQuizSelected].quizQuestions[currentQuestionIndex]
-        .answeredResult !==
-      allQuizzes[indexOfQuizSelected].quizQuestions[currentQuestionIndex]
-        .correctAnswer
-    ) {
-      // update the incorrect attemptes
-      allQuizzes[indexOfQuizSelected].quizQuestions[
-        currentQuestionIndex
-      ].statistics.incorrectAttempts += 1;
-      toast.error('Incorrect Answer!');
-
-      // if the answer is incorrect, go to the next question only
-      // if we are not at the last question
-      if (currentQuestionIndex != quizQuestions.length - 1) {
-        setTimeout(() => {
-          setCurrentQuestionIndex((current) => current + 1);
-          // initialize the choice after going to the next question
-          setSelectedChoice(null);
-        }, 1200);
+      if (res.ok) {
+        toast.success('Quiz results saved:', data.message);
       } else {
-        // if we select the wrong choice and we are at the end of the question
-        // end the quiz
-        // setTimer(0);
-        // clearInterval(interval);
-        setIsQuizEnded(true);
-        console.log(userAnswers)
+        console.error('Failed to save quiz results:', data.message);
       }
-
-      return;
+    } catch (error) {
+      console.error('Error saving quiz results:', error);
     }
+  };
 
-    
-    // update the correct attemptes
-    allQuizzes[indexOfQuizSelected].quizQuestions[
-      currentQuestionIndex
-    ].statistics.correctAttempts += 1;
-    // Increment the score by 1
-    setScore((prevState) => prevState + 10);
-  // dispatch(setUserScore(1));
-    toast.success('Awesome!');
-    // addExperience();
+  const restartQuiz = () => {
+    setCurrentQuestionIndex(0); // Reset to the first question
+    setUserAnswers(Array(quizQuestions.length).fill(-1)); // Reset user answers
+    setScore(0); // Reset score
+    setIsQuizEnded(false); // Hide the ScoreComponent
+    setSelectedChoice(null); // Reset selected choice
+  };
 
-    // This will stop the timer and end the quiz when currentQuestionIndex is the last
-    // and only if we select the correct otherwise the timer is still running
-
-    
-    if (
-      currentQuestionIndex === quizQuestions.length - 1 &&
-      allQuizzes[indexOfQuizSelected].quizQuestions[currentQuestionIndex]
-        .answeredResult ===
-        allQuizzes[indexOfQuizSelected].quizQuestions[currentQuestionIndex]
-          .correctAnswer
-    ) {
-      // setTimer(0);
-      // clearInterval(interval);
-      setIsQuizEnded(true);
-     dispatch(setUserScore(Number(score) +10 ));
-      updateUserInformation();
-      
-      return;
-    }
-if(isQuizEnded){
-  dispatch( setUserScore(score) );
-  console.log("user answer is ",userAnswers)
-  // dispatch(setAnswers(userAnswers));
-  
-}
-
- console.log(score)
-    // increment the currentQuestionIndex by 1 to go to the next question
-    setTimeout(() => {
-      setCurrentQuestionIndex((current) => current + 1);
-      // initialize the choice after going to the next question
-      setSelectedChoice(null);
-    }, 2000);
-  }
-
-  
-useEffect(() => {
-  const getQuizAssets=async()=>{
-    try{
-      const res = await fetch(`https://nafs-fakih.vercel.app/api/quizzes?id=${selectQuizToStart._id}`, {
-        method: 'GET',
-        headers: {
-          'Content-type': 'application/json',
-        },
-      });
-      const data = await res.json();
-      // console.log(data.quizzes);
-
-      const currentQuiz =data.quizzes.filter((quiz)=>quiz._id===selectQuizToStart._id)
-     
-      
-
-      // console.log(currentQuiz)
-
-      const currentQuestionAssets=currentQuiz[0].quizAssets
-// console.log(currentQuestionAssets)
-setImages(currentQuestionAssets)
-
-      // setQuizQuestions(data[0].quizQuestions);
-    }catch(error){
-      console.log(error);
-    }
-  }
-  getQuizAssets()
-}, [selectQuizToStart._id]);
-
-// console.log(images)
-
-const img=images[currentQuestionIndex]?.imgeSrc
-// console.log(img)
   return (
-    <div className="relative poppins rounded-sm my-9 md:w-9/12 w-[95%]   ">
-      <Toaster
-        toastOptions={{
-          // Define default options
-          className: '',
-          duration: 1500,
-          style: {
-            padding: '12px',
-          },
-        }}
-      />
-      {/* The Question Part */}
-      <div className="flex   items-center gap-2">
-        <div className="bg-theme flex  justify-center items-center rounded-md w-11 h-11 text-white p-3">
+    <div className="relative poppins rounded-sm my-9 md:w-9/12 w-[95%]">
+      <Toaster />
+      <div className="flex items-center gap-2">
+        <div className="bg-theme flex justify-center items-center rounded-md w-11 h-11 text-white p-3">
           {currentQuestionIndex + 1}
         </div>
-<div className=' w-full  grid lg:grid-cols-3  items-center gap-4 '>
-<p className={`${img ? 'md:col-span-2' : 'col-span-3'} `}>{quizQuestions[currentQuestionIndex].mainQuestion}</p>
-{img&&
- <Image src={img} alt="image"  className='col-span-1 rounded-md' width={300} height={300}  />
-}
- 
-  
- 
-  </div>
-        
+        <div className="w-full grid lg:grid-cols-3 items-center gap-4">
+          <p className={`${images[currentQuestionIndex]?.imgeSrc ? 'md:col-span-2' : 'col-span-3'}`}>
+            {quizQuestions[currentQuestionIndex].mainQuestion}
+          </p>
+          {images[currentQuestionIndex]?.imgeSrc && (
+            <Image src={images[currentQuestionIndex].imgeSrc} alt="image" className="col-span-1 rounded-md" width={300} height={300} />
+          )}
+        </div>
       </div>
-      {/* The Answers Part */}
       <div className="mt-7 flex flex-col gap-2">
-        {quizQuestions[currentQuestionIndex].choices.map(
-          (choice, indexChoice) => (
-            <div
-              key={indexChoice}
-              onClick={() => {
-                selectChoiceFunction(indexChoice);
-              }}
-              className={`p-3 ml-11 w-10/12 border border-theme rounded-md
-               hover:bg-theme hover:text-white transition-all select-none ${
-                 selectedChoice === indexChoice
-                   ? 'bg-theme text-white'
-                   : 'bg-white'
-               }`}
-            >
-              {choice}
-            </div>
-          ),
-        )}
+        {quizQuestions[currentQuestionIndex].choices.map((choice, index) => (
+          <div
+            key={index}
+            onClick={() => handleAnswerSelection(index)}
+            className={`p-3 ml-11 w-10/12 border border-theme rounded-md hover:bg-theme hover:text-white transition-all select-none ${
+              selectedChoice === index ? 'bg-theme text-white' : 'bg-white'
+            }`}
+          >
+            {choice}
+          </div>
+        ))}
       </div>
-      {/* Submit Button */}
-      <div className="flex justify-end mt-7  ">
+      <div className="flex justify-end mt-7">
         <button
-          onClick={() => {
-            moveToTheNextQuestion();
-          }}
-          disabled={isQuizEnded ? true : false}
+          onClick={moveToNextQuestion}
+          disabled={isQuizEnded}
           className={`p-2 px-5 text-[15px] text-white rounded-md bg-theme mr-[70px] ${
             isQuizEnded ? 'opacity-60' : 'opacity-100'
           }`}
@@ -363,232 +156,103 @@ const img=images[currentQuestionIndex]?.imgeSrc
       {isQuizEnded && (
         <ScoreComponent
           quizStartParentProps={{
-            setIsQuizEnded,
-            setIndexOfQuizSelected,
-            setCurrentQuestionIndex,
-            setSelectedChoice,
-            selectedChoice,
-            score,
-            setScore,
             quizQuestions,
-            isQuizEnded,
-            quiz,
-            userAnswers
-            
+            userAnswers,
+            score,
+            quiz: selectQuizToStart,
+            session,
+            restartQuiz,
+            onClose: handleCloseScoreComponent,
+             // Pass the restartQuiz function to ScoreComponent
           }}
         />
       )}
+    </div>
+  );
+}
+function emojiIconScore(score, totalQuestions) {
+  const emojiFaces = [
+    'confused-emoji.png', // Less than 60%
+    'happy-emoji.png',    // 60% to 80%
+    'very-happy-emoji.png' // 80% and above
+  ];
 
+  const percentage = (score / (totalQuestions * 10)) * 100;
 
+  if (percentage < 60) {
+    return emojiFaces[0]; // Confused emoji for less than 60%
+  } else if (percentage >= 60 && percentage < 80) {
+    return emojiFaces[1]; // Happy emoji for 60% to 80%
+  } else {
+    return emojiFaces[2]; // Very happy emoji for 80% and above
+  }
+}
+function ScoreComponent({ quizStartParentProps }) {
+  const { quizQuestions, userAnswers, score, quiz, session, restartQuiz } = quizStartParentProps;
+  const correctAnswers = quizQuestions.map(question => question.correctAnswer);
+  const correctCount = userAnswers.filter((answer, index) => answer === correctAnswers[index]).length;
+  const router = useRouter(); // Initialize the router
+
+  // Function to handle closing the ScoreComponent and navigating to the home page
+  const handleClose = () => {
+    router.push('/'); // Navigate to the home page
+  };
+  return (
+    <div className="flex items-center px-4 rounded-md top-[-80px] border flex-col border-gray-200 absolute w-full h-[480px] bg-white">
+       <div className="absolute top-4 right-4 cursor-pointer" onClick={handleClose}>
+        <IoClose className="text-2xl text-gray-600 hover:text-theme" />
+      </div>
+      <div className="flex gap-4 items-center w-full px-8 bg-purple-50 py-2">
+        <Image src={`/${emojiIconScore(score, quizQuestions.length)}`} alt="" width={60} height={60} />
+        <div className="flex gap-6 items-center mx-auto">
+          <span className="font-bold text-2xl">Your Score :</span>
+          <div className="text-[22px] text-center px-4 py-2 rounded-lg font-semibold text-theme">
+            {score}/{quizQuestions.length * 10}
+          </div>
+        </div>
+      </div>
+      <div className="w-3/5 justify-between flex gap-2 my-6">
+        <div className="flex gap-1 items-center justify-center">
+          <Image src="/correct-answer.png" alt="" width={20} height={20} />
+          <span className="text-[14px]">Correct Answers: {correctCount}</span>
+        </div>
+        <div className="flex gap-1 items-center justify-center">
+          <Image src="/incorrect-answer.png" alt="" width={20} height={20} />
+          <span className="text-[14px]">Incorrect Answers: {quizQuestions.length - correctCount}</span>
+        </div>
+        <button
+          onClick={restartQuiz} // Call restartQuiz when the button is clicked
+          className="p-2 bg-theme rounded-md text-white px-6"
+        >
+          Try Again
+        </button>
+      </div>
+      <div className="w-full h-full px-16 overflow-y-scroll">
+        <h1 className="font-extrabold text-xl text-theme my-6 m-auto w-full text-center mb-10 rounded-md sel">
+          Quiz Title : {quiz?.quizTitle}
+        </h1>
+        {quizQuestions.map((question, index) => (
+          <div key={index}>
+            <h1 className="font-semibold text-lg text-theme my-4 ">
+              Question {index + 1} : <span className='text-[#ff7e67]'>{question?.mainQuestion}</span> 
+            </h1>
+            <div className="w-full px-4 flex items-center justify-between bg-purple-50 p-4 rounded-md">
+              <div className="flex flex-col gap-2">
+                <h1 className="min-w-3/5 flex items-center gap-4 font-normal">
+                  Your Answer :
+                  <span className={`text-${userAnswers[index] === question.correctAnswer ? 'green-600' : 'red-500'}`}>
+                    {question.choices[userAnswers[index]]}
+                  </span>
+                </h1>
+                <h1>The Correct Answer : {question.choices[question.correctAnswer]}</h1>
+              </div>
+              <p>Points : {userAnswers[index] === question.correctAnswer ? 10 : 0}</p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
 export default QuizStartQuestions;
-
-function ScoreComponent({ quizStartParentProps }) {
-  const { quizToStartObject, allQuizzes } = useGlobalContextProvider();
-  const { selectQuizToStart } = quizToStartObject;
-  const [isPreview, setIsPreview] = useState(false);
-  const [isResultPreview, setIsResultPreview] = useState(false);
-  const numberOfQuestions = selectQuizToStart.quizQuestions.length;
-  const [answer,setAnswer] = useState('')
-  const {data:session} = useSession();
-  const router = useRouter();
-  //
-  // console.log(session?.user?.code)
-  const {
-    setIsQuizEnded,
-    setIndexOfQuizSelected,
-    setCurrentQuestionIndex,
-    setSelectedChoice,
-    selectedChoice,
-    setScore,
-    score,
-    quizQuestions,
-    setAnswers,
-    isQuizEnded,
-    quiz,
-    userAnswers
-  } = quizStartParentProps;
-  const handlePreview = () => {
-    setIsPreview(!isPreview);
-  };
-  function getUserAnswer(questionIndex) {
-    // Access the chosen answer index from the selectedChoice state
-    const chosenAnswerIndex = quizStartParentProps.selectedChoice
-  
-    console.log(chosenAnswerIndex)
-    console.log(questionIndex)
-    if(questionIndex){
-      setAnswer(quizQuestions[questionIndex].choices[chosenAnswerIndex])
-      
-    }
-   
-    // Check if an answer was chosen for the current question
-    if (chosenAnswerIndex !== null && chosenAnswerIndex >= 0 && quizQuestions[questionIndex].choices[chosenAnswerIndex]) {
-      // Return the chosen answer text based on the index
-   return    quizQuestions[questionIndex].choices[chosenAnswerIndex];
-      
-    } else {
-      // Handle the case where no answer was chosen
-      return 'No answer chosen';
-    }
-  }
-
-
-  // console.log(answer)
-
-  // function isAnswerCorrect(questionIndex) {
-  //   return userAnswers[questionIndex] === quizQuestions[questionIndex].correctAnswer;
-  // }
-
-
-  function emojiIconScore() {
-    const emojiFaces = [
-      'confused-emoji.png',
-      'happy-emoji.png',
-      'very-happy-emoji.png',
-    ];
-    const result = (score / selectQuizToStart.quizQuestions.length) * 10;
-console.log("your result is ",result);
-
-    if (result < 25) {
-      return emojiFaces[0];
-    }
-
-    if (result == 50) {
-      return emojiFaces[1];
-    }
-
-    return emojiFaces[2];
-  }
-
-  
-  console.log(score)
-
- 
-
-  function tryAgainFunction() {
-    setIsQuizEnded(false);
-    const newQuizIndex = allQuizzes.findIndex(
-      (quiz) => quiz._id === selectQuizToStart._id,
-    );
-    // 
-    
-    setIndexOfQuizSelected(newQuizIndex);
-    setCurrentQuestionIndex(0);
-    setSelectedChoice(null);
-    setScore(0);
-    
-  }
-
-  console.log(quiz)
-  const correctAnswers=quiz?.quizQuestions.map((question)=>question.correctAnswer)
-  console.log(correctAnswers)
-  console.log(userAnswers)
-
-  function calculateScore(userAnswers, correctAnswers) {
-    let score = 0;
-    for (let i = 0; i < userAnswers.length; i++) {
-      if (userAnswers[i] === correctAnswers[i]) {
-        score += 1;
-      }
-    }
-    return score;
-  }
-
-
-  return (
-    <div className=" flex items-center px-4 rounded-md top-[-80px] border flex-col border-gray-200 absolute w-full h-[480px] bg-white">
-      {/* Score */}
-      <div className=" flex gap-4 items-center  w-full  px-8 bg-purple-50  py-2">
-        <Image src={`/${emojiIconScore()}`} alt="" width={60} height={60} />
-        <div className="flex gap-6 items-center mx-auto">
-          <span className="font-bold text-2xl">Your Score :</span>
-          <div className="text-[22px] text-center px-4 py-2 rounded-lg  font-semibold text-theme ">
-            {score }/{numberOfQuestions *10}
-          </div>
-        </div>
-        
-        {/* statistics */}
-       
-        {/* <span>Or</span> */}
-     {/* <div className='flex justify-center items-center  '>
-      
-      
-        {isPreview ? (
-        <Certificate userName={session?.user?.name} quizTitle={selectQuizToStart.title} score={score} setIsPreview={setIsPreview}  />
-      ) : (
-        <button onClick={handlePreview}
-        className='text-lg absolute top-2 right-2 bg-themeYellow font-semibold px-4 py-2 rounded-lg text-theme'
-        >Preview Certificate</button>
-      )}</div> */}
-     
-  
-     
-   
-      </div>
-      <div className=" w-3/5 justify-between  flex gap-2  my-6">
-          <div className="flex gap-1 items-center justify-center">
-            <Image src="/correct-answer.png" alt="" width={20} height={20} />
-            <span className="text-[14px]">Correct Answers:   {calculateScore(userAnswers,correctAnswers)}</span>
-          </div>
-         
-          <div className="flex gap-1 items-center justify-center">
-            <Image src="/incorrect-answer.png" alt="" width={20} height={20} />
-            <span className="text-[14px]">
-              Incorrect Answers:  
-              {numberOfQuestions - calculateScore(userAnswers,correctAnswers)}
-            </span>
-          </div>
-          <button
-          onClick={() => tryAgainFunction()}
-          className="p-2 bg-theme rounded-md text-white px-6"
-        >
-          Try Again
-        </button>
-        </div>
-     {/* <button onClick={() => setIsResultPreview(!isResultPreview)}
-        className={`${isPreview ? "hidden" : "block"} text-lg absolute bottom-2   bg-themeYellow font-semibold px-4 py-2 rounded-lg text-theme`}
-        >Quiz Preview</button>
-      </div> */}
-
-{/* <button 
-        className={`${isPreview ? "hidden" : "block"} text-lg  my-4 self-start     font-semibold px-4 py-2 rounded-lg text-theme`}
-        >Preview....</button> */}
-
-      
-        
-<div className='w-full h-full     px-16  overflow-y-scroll '>
-   <h1 className='font-extrabold text-xl  text-theme my-6  m-auto w-full text-center mb-10 rounded-md sel'>Quiz Title :  {quiz?.quizTitle}</h1>
-   
-   {isQuizEnded &&  (
- quiz?.quizQuestions .map((question, index) => ( <>
-    <h1 className='font-semibold text-lg text-theme my-4  underline' key={index}> Question {index + 1} : {question?.mainQuestion} </h1>
-    <div className="w-full px-4 flex  items-center justify-between bg-purple-50 p-4 rounded-md  ">
-    <div className='flex flex-col gap-2 '>
-    <h1 className='min-w-3/5 flex items-center gap-4 font-normal '> Your Answer : 
-   <span className={`text-${
-                question.choices[userAnswers[index]] === question.choices[question.correctAnswer] ? 'green-600' : 'red-500'
-              }`}>
-                {question.choices[userAnswers[index]]}
-              </span></h1>
-   <h1> The Correct Answer : {question.choices[question.correctAnswer]} </h1>
-    </div>
-   
-    
-   
-   <p>Points : {question.choices[userAnswers[index]] === question.choices[question.correctAnswer] ? 10 : 0}</p>
-    
-    </div>
-    
-    </>
-))
-   )}
-  
-  
-    </div>
-    </div>
-  );
-}

@@ -1,43 +1,44 @@
+import { PrismaClient } from '@prisma/client';
+import { NextResponse } from 'next/server';
 
-import { connectToDB } from "@/libs/mongoDB";
-import User from "@/app/models/UserSchema";
-import bcryptjs from "bcryptjs";
-import { NextResponse, NextRequest } from "next/server";
 
-connectToDB();
+const prisma = new PrismaClient();
 
 export async function POST(request) {
   try {
-    const { fullName, email, password ,code,role,grade  } = await request.json();
+    const { fullName, email, password, code, role, grade } = await request.json();
+console.log(fullName,email,password,code,role,grade)
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { code },
+    });
 
-    const user = await User.findOne({ code });
-
-    if (user) {
+    if (existingUser) {
       return NextResponse.json(
-        { error: "User already exists" },
+        { error: 'User already exists' },
         { status: 400 }
       );
     }
 
-    // const salt = await bcryptjs.genSalt(10);
-    // const hashedPassword = await bcryptjs.hash(password, salt);
+    // Hash the password
+  
 
-    const newUser = new User({
-      fullName,
-      email,
-      password,
-      code,
-      role,
-      grade
-      
+    // Create the user
+    const newUser = await prisma.user.create({
+      data: {
+        fullName,
+        email,
+        password,
+        code,
+        role,
+        grade,
+      },
     });
 
-    const savedUser = await newUser.save();
-
     return NextResponse.json({
-      message: "User created successfully",
+      message: 'User created successfully',
       success: true,
-      savedUser,
+      user: newUser,
     });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
