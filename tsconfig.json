@@ -27,7 +27,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-, "app/api/user/import/route.js", ".next/types/app/api/auth/[...nextauth]/route.ts"  ],
+, "app/api/user/import/route.js", ".next/types/app/api/auth/[...nextauth]/route.ts", "app/api/getUserQuizzes/route.ts", "app/api/students/[code]/quiz-stats.js", "app/api/students/[code]/quiz-stats/route.js"  ],
   "exclude": [
     "node_modules"
   ]

@@ -36,7 +36,7 @@ export async function POST(request) {
 export async function GET() {
   try {
     const quizzes = await prisma.quiz.findMany({
-      include: { quizQuestions: true }, // Include nested quizQuestions
+      include: { quizQuestions: true ,assignments: true}, // Include nested quizQuestions
     });
 
     return NextResponse.json({ quizzes });

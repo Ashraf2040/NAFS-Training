@@ -1,30 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatDeepSeek } from "@langchain/deepseek";
 import { HumanMessage } from "@langchain/core/messages";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
-
-// import saveQuizz from "./saveToDb";
 
 export async function POST(req) {
   const body = await req.formData();
   const document = body.get("pdf");
 
+  if (!document) {
+    return NextResponse.json(
+      { error: "No PDF file uploaded" },
+      { status: 400 }
+    );
+  }
+
   try {
-    const pdfLoader = new PDFLoader(document , {
-      parsedItemSeparator: " ",
-    });
+    const pdfLoader = new PDFLoader(document, { parsedItemSeparator: " " });
     const docs = await pdfLoader.load();
 
-    // Separate the last two pages as a guide
+    console.log("Extracted PDF Content:", docs);
+
     const totalPages = docs.length;
-    const lastTwoPages = docs.slice(totalPages - 2, totalPages).map((doc) => doc.pageContent);
-    const questionTexts = docs.slice(0, totalPages - 2).map((doc) => doc.pageContent);
+    if (totalPages < 3) {
+      return NextResponse.json(
+        { error: "PDF must contain at least three pages (questions and answer guide)." },
+        { status: 400 }
+      );
+    }
+
+    // Divide the document content into chunks
+    const chunkSize = 5; // You can adjust the chunk size to control performance
+    const chunks = [];
+    for (let i = 0; i < totalPages; i += chunkSize) {
+      chunks.push(docs.slice(i, i + chunkSize).map(doc => doc.pageContent).join("\n"));
+    }
+
+    const lastTwoPages = docs.slice(totalPages - 2, totalPages).map(doc => doc.pageContent);
+    const questionTexts = docs.slice(0, totalPages - 2).map(doc => doc.pageContent);
 
     const prompt = `
       Given the following text, which may be in Arabic or English, generate a quiz based on the text. 
       The quiz should be in the same language as the text. 
-      use the title found in the first line as a quiz title.
+      Use the title found in the first line as a quiz title.
       If the text already contains questions, use those questions directly to form the quiz. 
       If the text does not contain questions, generate new questions based on the text. 
       Return JSON only that contains a quiz object with fields: icon, quizTitle, id, and quizQuestions. 
@@ -39,16 +57,19 @@ export async function POST(req) {
       Answer Guide (from the last two pages): ${lastTwoPages.join("\n")}
     `;
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.DEEPSEEK_API_KEY) {
+      console.error("DeepSeek API key is missing");
       return NextResponse.json(
-        { error: "OpenAI API key not provided" },
+        { error: "DeepSeek API key not provided" },
         { status: 500 }
       );
     }
 
-    const model = new ChatOpenAI({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: "gpt-4-1106-preview",
+    console.log("Using DeepSeek API Key:", process.env.DEEPSEEK_API_KEY ? "Exists" : "Missing");
+
+    const model = new ChatDeepSeek({
+      deepseekApiKey: process.env.DEEPSEEK_API_KEY,
+      modelName: "deepseek-chat",
     });
 
     const parser = new JsonOutputFunctionsParser();
@@ -71,10 +92,7 @@ export async function POST(req) {
                   properties: {
                     id: { type: "string" },
                     mainQuestion: { type: "string" },
-                    choices: {
-                      type: "array",
-                      items: { type: "string" },
-                    },
+                    choices: { type: "array", items: { type: "string" } },
                     correctAnswer: { type: "number" },
                     answeredResult: { type: "number", default: -1 },
                     statistics: {
@@ -102,18 +120,25 @@ export async function POST(req) {
       .pipe(parser);
 
     const message = new HumanMessage({
-      content: [
-        {
-          type: "text",
-          text: prompt,
-        },
-      ],
+      content: [{ type: "text", text: prompt }], 
     });
 
+    console.log("Sending Request to DeepSeek...");
     const result = await runnable.invoke([message]);
+
+    console.log("DeepSeek API Response:", JSON.stringify(result, null, 2));
+
+    if (!result || !result.quiz || !Array.isArray(result.quiz.quizQuestions)) {
+      console.error("Invalid DeepSeek Response:", JSON.stringify(result, null, 2));
+      return NextResponse.json(
+        { error: "DeepSeek API returned an invalid or empty response." },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ result }, { status: 200 });
   } catch (e) {
+    console.error("Error in API Route:", e);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

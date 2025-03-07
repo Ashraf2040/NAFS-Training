@@ -1,6 +1,6 @@
 
 "use client";
-import { Inter, Poppins,Whisper } from 'next/font/google';
+import { Inter, Poppins,Whisper,Lexend } from 'next/font/google';
 import './globals.css';
 import { ContextProvider } from './ContextApi';
 import AuthProvider from './Components/Provider';
@@ -22,6 +22,11 @@ const whisper = Whisper({
   variable: '--font-poppins',
   weight: [ '400'],
 });
+const lexend = Lexend({
+  subsets: ['latin'],
+  variable: '--font-poppins',
+  weight: [ '400'],
+});
 
 // export const metadata = {
 //   title: 'Create Next App',
@@ -37,7 +42,7 @@ export default function RootLayout({ children }) {
         <title>NAFS QUIZ APP</title>
       </head>
 
-      <body className={`   ${poppins.className}   `}>
+      <body className={`   ${lexend.className}   `}>
       <Provider store={store}>
         <ContextProvider>
         

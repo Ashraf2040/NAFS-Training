@@ -14,12 +14,13 @@ model Quiz {
   skill         String
   icon          String? @default("faQuestion")
   quizTitle     String
+  isAssigned    Boolean @default(false)
   quizQuestions Question[]
   quizAssets    String[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
-  users         UserQuiz[]
- 
+  assignments   QuizAssignment[] // Quizzes assigned by admins
+  userQuizzes   UserQuiz[]       // Quizzes completed by students
 }
 
 model Question {
@@ -38,25 +39,39 @@ model User {
   fullName  String
   email     String    @unique
   password  String
-  role      String
+  role      String    @default("ST") // "AD" for Admin, "ST" for Student
   code      Int       @unique
   trials    String[]  @default([])
   score     Int       @default(0)
   grade     String
-  quizzes   UserQuiz[]
+  assignments QuizAssignment[] // Quizzes assigned to the user
+  quizzes   UserQuiz[]         // Quizzes completed by the user
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
 
+model QuizAssignment {
+  id          String   @id @default(cuid())
+  quizId      String
+  userId      String
+  dueDate     DateTime // Due date for the quiz (15 days after assignment)
+  status      String   @default("Not Started") // "ASSIGNED", "COMPLETED"
+  quiz        Quiz     @relation(fields: [quizId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  assignedAt  DateTime @default(now())
+  @@unique([quizId, userId]) // Ensure unique assignments per user
+}
+
 model UserQuiz {
-  id          String   @id @default(cuid()) // Add an ID field for unique identification
+  id          String   @id @default(cuid())
   userId      String
   quizId      String
-  score       Int
+  score       Int      @default(0)
   userAnswers Json     // Store user answers as JSON
   trialNumber Int      // Track the trial number
-  dueDate     DateTime // Due date for the quiz (15 days after assignment)
-  status      String   @default("ASSIGNED") // "ASSIGNED", "COMPLETED"
+  status      String   @default("COMPLETED") // Only "COMPLETED" since it's created after finishing
   user        User     @relation(fields: [userId], references: [id])
   quiz        Quiz     @relation(fields: [quizId], references: [id])
   createdAt   DateTime @default(now())

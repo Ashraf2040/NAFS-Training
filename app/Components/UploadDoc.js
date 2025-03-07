@@ -183,7 +183,8 @@ const UploadDoc = () => {
       if (res.status === 200) {
         const data = await res.json();
         setUpdatedQuiz(data.result.quiz);
-        saveQuiz(data.result.quiz);
+        console.log(data.result);
+        saveQuiz(data.result);
         router.push("/");
         revalidatePath("/");
       }

@@ -1,15 +1,11 @@
-'use client';
-
+"use client";
 import React, { useEffect, useState } from 'react';
-import useGlobalContextProvider from './../../ContextApi'
+import useGlobalContextProvider from './../../ContextApi';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation'; // Import the router
+import { useRouter } from 'next/navigation';
 import { IoClose } from 'react-icons/io5';
 import toast, { Toaster } from 'react-hot-toast';
 import { useSession } from 'next-auth/react';
-import { useDispatch, useSelector } from 'react-redux';
-// import { setUserScore, addQuizResult } from '@/app/reducers/userSlice';
-// import { revalidatePath } from 'next/cache';
 
 function QuizStartQuestions({ onUpdateTime }) {
   const { quizToStartObject, allQuizzes, setAllQuizzes } = useGlobalContextProvider();
@@ -23,16 +19,14 @@ function QuizStartQuestions({ onUpdateTime }) {
   const [score, setScore] = useState(0);
   const [images, setImages] = useState([]);
 
-  const dispatch = useDispatch();
   const { data: session } = useSession();
   const code = session?.user?.code;
+  const router = useRouter();
 
   useEffect(() => {
     fetchQuizAssets();
   }, [selectQuizToStart._id]);
-  const handleCloseScoreComponent = () => {
-    setIsQuizEnded(false); // Hide the ScoreComponent
-  };
+
   const fetchQuizAssets = async () => {
     try {
       const res = await fetch(`/api/quizzes?id=${selectQuizToStart._id}`);
@@ -78,7 +72,7 @@ function QuizStartQuestions({ onUpdateTime }) {
     const correctAnswers = quizQuestions.map(question => question.correctAnswer);
     const correctCount = userAnswers.filter((answer, index) => answer === correctAnswers[index]).length;
     const totalScore = correctCount * 10;
-  
+
     try {
       const res = await fetch('/api/user/quizSubmisiion', {
         method: 'POST',
@@ -86,18 +80,18 @@ function QuizStartQuestions({ onUpdateTime }) {
         body: JSON.stringify({
           code,
           quiz: {
-            _id: selectQuizToStart.id, // Quiz ID
-            score: totalScore, // User's score for this quiz
-            userAnswers, // User's answers
+            _id: selectQuizToStart.id,
+            score: totalScore,
+            userAnswers,
           },
-          totalScore: totalScore, // Pass the total score to update the user's overall score
+          totalScore: totalScore,
         }),
       });
-  
-      const data = await res.json();
+
       if (res.ok) {
-        toast.success('Quiz results saved:', data.message);
+        toast.success('Quiz results saved successfully!');
       } else {
+        const data = await res.json();
         console.error('Failed to save quiz results:', data.message);
       }
     } catch (error) {
@@ -106,53 +100,79 @@ function QuizStartQuestions({ onUpdateTime }) {
   };
 
   const restartQuiz = () => {
-    setCurrentQuestionIndex(0); // Reset to the first question
-    setUserAnswers(Array(quizQuestions.length).fill(-1)); // Reset user answers
-    setScore(0); // Reset score
-    setIsQuizEnded(false); // Hide the ScoreComponent
-    setSelectedChoice(null); // Reset selected choice
+    setCurrentQuestionIndex(0);
+    setUserAnswers(Array(quizQuestions.length).fill(-1));
+    setScore(0);
+    setIsQuizEnded(false);
+    setSelectedChoice(null);
+  };
+
+  const handleCloseScoreComponent = () => {
+    setIsQuizEnded(false);
   };
 
   return (
-    <div className="relative poppins rounded-sm my-9 md:w-9/12 w-[95%]">
+    <div className="poppins mx-auto my-8 max-w-4xl bg-white shadow-lg rounded-lg overflow-hidden">
       <Toaster />
-      <div className="flex items-center gap-2">
-        <div className="bg-theme flex justify-center items-center rounded-md w-11 h-11 text-white p-3">
-          {currentQuestionIndex + 1}
-        </div>
-        <div className="w-full grid lg:grid-cols-3 items-center gap-4">
-          <p className={`${images[currentQuestionIndex]?.imgeSrc ? 'md:col-span-2' : 'col-span-3'}`}>
-            {quizQuestions[currentQuestionIndex].mainQuestion}
-          </p>
-          {images[currentQuestionIndex]?.imgeSrc && (
-            <Image src={images[currentQuestionIndex].imgeSrc} alt="image" className="col-span-1 rounded-md" width={300} height={300} />
-          )}
-        </div>
+      {/* Header */}
+      <div className="bg-gradient-to-r from-theme to-themeYellow p-4">
+        <h2 className="text-2xl text-white font-semibold text-center">
+          Quiz: {selectQuizToStart.quizTitle}
+        </h2>
       </div>
-      <div className="mt-7 flex flex-col gap-2">
-        {quizQuestions[currentQuestionIndex].choices.map((choice, index) => (
-          <div
-            key={index}
-            onClick={() => handleAnswerSelection(index)}
-            className={`p-3 ml-11 w-10/12 border border-theme rounded-md hover:bg-theme hover:text-white transition-all select-none ${
-              selectedChoice === index ? 'bg-theme text-white' : 'bg-white'
+
+      {/* Question Section */}
+      <div className="p-6">
+        <div className="flex items-center gap-4">
+          <div className="bg-theme text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">
+            {currentQuestionIndex + 1}
+          </div>
+          <div className="flex-1">
+            <p className="text-lg text-gray-800 font-medium">
+              {quizQuestions[currentQuestionIndex].mainQuestion}
+            </p>
+            {images[currentQuestionIndex]?.imgeSrc && (
+              <Image
+                src={images[currentQuestionIndex].imgeSrc}
+                alt="Question Image"
+                width={200}
+                height={200}
+                className="mt-4 rounded-md shadow-sm"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Choices */}
+        <div className="mt-6 space-y-3">
+          {quizQuestions[currentQuestionIndex].choices.map((choice, index) => (
+            <div
+              key={index}
+              onClick={() => handleAnswerSelection(index)}
+              className={`p-4 border border-gray-200 rounded-md cursor-pointer transition-all hover:bg-theme hover:text-white ${
+                selectedChoice === index ? 'bg-theme text-white' : 'bg-white text-gray-800'
+              }`}
+            >
+              {choice}
+            </div>
+          ))}
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={moveToNextQuestion}
+            disabled={isQuizEnded}
+            className={`px-6 py-2 bg-theme text-white font-semibold rounded-md shadow-md hover:bg-themeYellow hover:text-black transition-all ${
+              isQuizEnded ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            {choice}
-          </div>
-        ))}
+            {currentQuestionIndex < quizQuestions.length - 1 ? 'Next' : 'Finish'}
+          </button>
+        </div>
       </div>
-      <div className="flex justify-end mt-7">
-        <button
-          onClick={moveToNextQuestion}
-          disabled={isQuizEnded}
-          className={`p-2 px-5 text-[15px] text-white rounded-md bg-theme mr-[70px] ${
-            isQuizEnded ? 'opacity-60' : 'opacity-100'
-          }`}
-        >
-          Submit
-        </button>
-      </div>
+
+      {/* Score Component */}
       {isQuizEnded && (
         <ScoreComponent
           quizStartParentProps={{
@@ -163,13 +183,13 @@ function QuizStartQuestions({ onUpdateTime }) {
             session,
             restartQuiz,
             onClose: handleCloseScoreComponent,
-             // Pass the restartQuiz function to ScoreComponent
           }}
         />
       )}
     </div>
   );
 }
+
 function emojiIconScore(score, totalQuestions) {
   const emojiFaces = [
     'confused-emoji.png', // Less than 60%
@@ -179,77 +199,103 @@ function emojiIconScore(score, totalQuestions) {
 
   const percentage = (score / (totalQuestions * 10)) * 100;
 
-  if (percentage < 60) {
-    return emojiFaces[0]; // Confused emoji for less than 60%
-  } else if (percentage >= 60 && percentage < 80) {
-    return emojiFaces[1]; // Happy emoji for 60% to 80%
-  } else {
-    return emojiFaces[2]; // Very happy emoji for 80% and above
-  }
+  if (percentage < 60) return emojiFaces[0];
+  else if (percentage >= 60 && percentage < 80) return emojiFaces[1];
+  else return emojiFaces[2];
 }
+
 function ScoreComponent({ quizStartParentProps }) {
-  const { quizQuestions, userAnswers, score, quiz, session, restartQuiz } = quizStartParentProps;
+  const { quizQuestions, userAnswers, score, quiz, session, restartQuiz, onClose } = quizStartParentProps;
   const correctAnswers = quizQuestions.map(question => question.correctAnswer);
   const correctCount = userAnswers.filter((answer, index) => answer === correctAnswers[index]).length;
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
 
-  // Function to handle closing the ScoreComponent and navigating to the home page
   const handleClose = () => {
-    router.push('/'); // Navigate to the home page
+    onClose();
+    router.push('/');
   };
+
   return (
-    <div className="flex items-center px-4 rounded-md top-[-80px] border flex-col border-gray-200 absolute w-full h-[480px] bg-white">
-       <div className="absolute top-4 right-4 cursor-pointer" onClick={handleClose}>
-        <IoClose className="text-2xl text-gray-600 hover:text-theme" />
-      </div>
-      <div className="flex gap-4 items-center w-full px-8 bg-purple-50 py-2">
-        <Image src={`/${emojiIconScore(score, quizQuestions.length)}`} alt="" width={60} height={60} />
-        <div className="flex gap-6 items-center mx-auto">
-          <span className="font-bold text-2xl">Your Score :</span>
-          <div className="text-[22px] text-center px-4 py-2 rounded-lg font-semibold text-theme">
-            {score}/{quizQuestions.length * 10}
-          </div>
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="bg-white max-w-2xl w-full mx-4 rounded-lg shadow-xl overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-theme to-themeYellow p-4 flex justify-between items-center">
+          <h3 className="text-xl text-white font-semibold">Quiz Results</h3>
+          <IoClose
+            className="text-2xl text-white cursor-pointer hover:text-gray-200"
+            onClick={handleClose}
+          />
         </div>
-      </div>
-      <div className="w-3/5 justify-between flex gap-2 my-6">
-        <div className="flex gap-1 items-center justify-center">
-          <Image src="/correct-answer.png" alt="" width={20} height={20} />
-          <span className="text-[14px]">Correct Answers: {correctCount}</span>
-        </div>
-        <div className="flex gap-1 items-center justify-center">
-          <Image src="/incorrect-answer.png" alt="" width={20} height={20} />
-          <span className="text-[14px]">Incorrect Answers: {quizQuestions.length - correctCount}</span>
-        </div>
-        <button
-          onClick={restartQuiz} // Call restartQuiz when the button is clicked
-          className="p-2 bg-theme rounded-md text-white px-6"
-        >
-          Try Again
-        </button>
-      </div>
-      <div className="w-full h-full px-16 overflow-y-scroll">
-        <h1 className="font-extrabold text-xl text-theme my-6 m-auto w-full text-center mb-10 rounded-md sel">
-          Quiz Title : {quiz?.quizTitle}
-        </h1>
-        {quizQuestions.map((question, index) => (
-          <div key={index}>
-            <h1 className="font-semibold text-lg text-theme my-4 ">
-              Question {index + 1} : <span className='text-[#ff7e67]'>{question?.mainQuestion}</span> 
-            </h1>
-            <div className="w-full px-4 flex items-center justify-between bg-purple-50 p-4 rounded-md">
-              <div className="flex flex-col gap-2">
-                <h1 className="min-w-3/5 flex items-center gap-4 font-normal">
-                  Your Answer :
-                  <span className={`text-${userAnswers[index] === question.correctAnswer ? 'green-600' : 'red-500'}`}>
-                    {question.choices[userAnswers[index]]}
-                  </span>
-                </h1>
-                <h1>The Correct Answer : {question.choices[question.correctAnswer]}</h1>
+
+        {/* Score Summary */}
+        <div className="p-6 bg-gray-50">
+          <div className="flex items-center gap-4">
+            <Image
+              src={`/${emojiIconScore(score, quizQuestions.length)}`}
+              alt="Score Emoji"
+              width={60}
+              height={60}
+            />
+            <div className="flex-1 text-center">
+              <span className="text-2xl font-bold text-theme">Your Score:</span>
+              <div className="text-3xl text-themeYellow font-semibold mt-2">
+                {score}/{quizQuestions.length * 10}
               </div>
-              <p>Points : {userAnswers[index] === question.correctAnswer ? 10 : 0}</p>
             </div>
           </div>
-        ))}
+          <div className="flex justify-around mt-4 text-gray-700">
+            <div className="flex items-center gap-2">
+              <Image src="/correct-answer.png" alt="" width={20} height={20} />
+              <span>Correct: {correctCount}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Image src="/incorrect-answer.png" alt="" width={20} height={20} />
+              <span>Incorrect: {quizQuestions.length - correctCount}</span>
+            </div>
+          </div>
+          <div className="flex justify-center gap-4 mt-6">
+            <button
+              onClick={restartQuiz}
+              className="px-6 py-2 bg-theme text-white font-semibold rounded-md shadow-md hover:bg-themeYellow hover:text-black transition-all"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={handleClose}
+              className="px-6 py-2 bg-gray-200 text-gray-700 font-semibold rounded-md shadow-md hover:bg-gray-300 transition-all"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+
+        {/* Detailed Results */}
+        <div className="p-6 max-h-96 overflow-y-auto">
+          <h4 className="text-xl text-theme font-semibold text-center mb-4">
+            {quiz?.quizTitle}
+          </h4>
+          {quizQuestions.map((question, index) => (
+            <div key={index} className="mb-4 last:mb-0">
+              <h5 className="text-lg text-theme font-medium">
+                Q{index + 1}: <span className="text-gray-700">{question.mainQuestion}</span>
+              </h5>
+              <div className="mt-2 p-4 bg-gray-100 rounded-md flex justify-between items-center">
+                <div className="space-y-1">
+                  <p>
+                    Your Answer:{' '}
+                    <span className={userAnswers[index] === question.correctAnswer ? 'text-green-600' : 'text-red-500'}>
+                      {question.choices[userAnswers[index]]}
+                    </span>
+                  </p>
+                  <p>Correct Answer: <span className="text-gray-800">{question.choices[question.correctAnswer]}</span></p>
+                </div>
+                <p className="text-theme font-semibold">
+                  {userAnswers[index] === question.correctAnswer ? '+10' : '0'}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

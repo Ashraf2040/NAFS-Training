@@ -9,133 +9,27 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Hero from './Hero';
 import ShowStatistics from './ShowStatistics';
+import { skillsData } from '../../lib/skillsData';
+import toast, { Toaster } from 'react-hot-toast';
 
 function QuizzesArea({ props }) {
   const { allQuizzes, userObject, isLoadingObject } = useGlobalContextProvider();
   const router = useRouter();
   const { user, setUser } = userObject;
   const [students, setStudents] = useState([]);
+  const [assignedQuizzes, setAssignedQuizzes] = useState([]);
   const [statShow, setStatShow] = useState(false);
-  const [subject, setSubject] = useState(''); // No default value
-  const [grade, setGrade] = useState(''); // No default value
-  const [skill, setSkill] = useState(''); // No default value
+  const [subject, setSubject] = useState('');
+  const [grade, setGrade] = useState('');
+  const [skill, setSkill] = useState('');
   const [hoveredOutcome, setHoveredOutcome] = useState(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Track dropdown open state
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { isLoading } = isLoadingObject;
   const { data: session } = useSession();
-  const skills = [
-    {
-      grade: "3",
-      outcomes: [
-        {
-          subject: "English",
-          outcomes: [
-            "Vocabulary Acquisition and Use of Verbal Semantics",
-            "Reading Comprehension",
-          ],
-        },
-        {
-          subject: "Math",
-          outcomes: [
-            "Numbers and operations",
-            "Number sense and operations",
-            "Patterns, Relationships and Functions",
-            "Algebraic structures and mathematical expressions",
-            "Geometric shapes",
-            "Statistics and probabilities",
-          ],
-        },
-        {
-          subject: "Science",
-          outcomes: [
-            "Structure and function in living organisms",
-            "Organization and diversity of living organisms",
-            "Ecosystems and their interactions",
-            "Genetics",
-          ],
-        },
-      ],
-    },
-    {
-      grade: "6",
-      outcomes: [
-        {
-          subject: "English",
-          outcomes: [
-            "Vocabulary Acquisition and Use of Verbal Semantics",
-            "Reading Comprehension",
-          ],
-        },
-        {
-          subject: "Math",
-          outcomes: [
-            "Numbers and operations",
-            "Number sense and operations",
-            "Patterns, Relationships and Functions",
-            "Algebraic structures and mathematical expressions",
-            "Identifying 2D and 3D geometric shapes, classifying them based on their elementsproperties and creating accurate drawings of them.",
-            "Measurement and its units",
-            "Calculate Probabilities",
-          ],
-        },
-        {
-          subject: "Science",
-          outcomes: [
-            "Life Science",
-            "Matter and its interactions",
-            "Motion and Forces",
-            "Energy",
-            "waves and vibrations",
-            "Electromagnetism",
-            "The universe and the solar system",
-            "The Earth System",
-          ],
-        },
-      ],
-    },
-    {
-      grade: "9",
-      outcomes: [
-        {
-          subject: "English",
-          outcomes: [
-            "Vocabulary Acquisition and Use of Verbal Semantics",
-            "Reading Comprehension",
-          ],
-        },
-        {
-          subject: "Math",
-          outcomes: [
-            "Numbers and operations",
-            "Number sense and operations",
-            "Patterns, Relationships and Functions",
-            "Algebraic structures and mathematical expressions",
-            "Geometric shapes",
-            "Measurement and its units",
-            "Data analysis and interpretation",
-            "Calculating probabilities",
-          ],
-        },
-        {
-          subject: "Science",
-          outcomes: [
-            "Structure and function in living organisms",
-            "Organizing of living organisms and their diversity",
-            "Genetics",
-            "Matter and its interactions",
-            "Motion and Forces",
-            "Electromagnetism",
-            "Energy",
-            "Waves and vibrations",
-            "The universe and the solar system",
-            "Earth System",
-            "Land and human activity",
-          ],
-        },
-      ],
-    },
-  ];
-console.log(allQuizzes)
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [userQuizzes, setUserQuizzes] = useState([]);
+  const [selectedSubject, setSelectedSubject] = useState(null);
+
   useEffect(() => {
     const getStudentData = async () => {
       await fetch('/api/user/getUsers', {
@@ -145,183 +39,307 @@ console.log(allQuizzes)
         },
       })
         .then((response) => response.json())
-        .then((data) => {
-          setStudents(data);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
+        .then((data) => setStudents(data))
+        .catch((error) => console.error(error));
     };
-
     getStudentData();
   }, [setStudents]);
 
-  const currentStudent = students?.find(student => student.code === session?.user?.code);
+  const mappedStudent = students?.filter((student) => student.code === session?.user.code);
+
+  useEffect(() => {
+    const assignedQuizzes = async () => {
+      try {
+        const response = await fetch(`/api/assignedQuiz?userId=${mappedStudent[0]?.id}`, {
+          cache: 'no-cache',
+        });
+        if (!response.ok) {
+          toast.error('Something went wrong...');
+          throw new Error('fetching failed...');
+        }
+        const quizzAssigned = await response.json();
+        setAssignedQuizzes(quizzAssigned.quizzesAssigned);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    assignedQuizzes();
+  }, [mappedStudent]);
+
+  useEffect(() => {
+    const fetchUserQuizzes = async () => {
+      if (!mappedStudent[0]?.id) return;
+      try {
+        const response = await fetch(`/api/getUserQuizzes?userId=${mappedStudent[0]?.id}`, {
+          cache: 'no-cache',
+        });
+        if (!response.ok) throw new Error('Failed to fetch user quizzes');
+        const { userQuizzes } = await response.json();
+        setUserQuizzes(userQuizzes);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchUserQuizzes();
+  }, [mappedStudent[0]?.id]);
 
   const filterQuizzes = (quizzes, subject, grade, skill) => {
-    return quizzes.filter(quiz => {
-      return quiz.subject === subject && quiz.grade === grade && quiz.skill === skill;
-    });
+    return quizzes.filter(quiz => quiz.subject === subject && quiz.grade === grade && quiz.skill === skill);
+  };
+
+  const truncateText = (text, wordLimit) => {
+    const words = text.split(" ");
+    if (words.length > wordLimit) return words.slice(0, wordLimit).join(" ") + " ...";
+    return text;
   };
 
   const quizzes = filterQuizzes(allQuizzes, subject, grade, skill);
-  const filteredOutcomes = skills
+  const filteredOutcomes = skillsData
     .find((skill) => skill.grade === grade)
     ?.outcomes.find((outcome) => outcome.subject === subject)?.outcomes || [];
-console.log(quizzes)
-  // Close the modal when clicking outside
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (hoveredOutcome && !event.target.closest('.modal-content')) {
-        setHoveredOutcome(null);
-      }
+      if (hoveredOutcome && !event.target.closest('.modal-content')) setHoveredOutcome(null);
     };
-
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [hoveredOutcome]);
 
+  const populateQuizzes = () => {
+    if (session && session.user.role === 'AD') return quizzes;
+    else return assignedQuizzes?.quiz;
+  };
+
+  const quizzesToRender = populateQuizzes();
+
+  const assignQuizToGrade = async (quizId) => {
+    if (!grade) {
+      alert("Please select a grade first.");
+      return;
+    }
+    try {
+      const response = await fetch('/api/assign-quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quizId, grade }),
+      });
+      const data = await response.json();
+      if (response.ok) alert("Quiz assigned successfully!");
+      else alert(data.message || "Failed to assign quiz.");
+    } catch (error) {
+      console.error("Error assigning quiz:", error);
+      alert("An error occurred while assigning the quiz.");
+    }
+  };
+
+  const subjectBoxes = [
+    { name: "Science", icon: "/science-icon.svg" },
+    { name: "Math", icon: "/math-icon.svg" },
+    { name: "English", icon: "/english-icon.svg" },
+  ];
+
   return (
-    <div className="poppins mx-12 mt-10 h-full">
-      <div>
+    <div className="poppins mx-8 my-6 max-w-7xl md:min-w-[800px] shadow-lg rounded-lg overflow-hidden">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-theme to-themeYellow p-6">
+        <h1 className="text-3xl text-white font-bold text-center">
+          {user.isLogged ? 'Your Quiz Dashboard' : 'NAFS Training Platform'}
+        </h1>
+      </div>
+
+      <div className="p-6">
         {isLoading ? (
-          <div></div>
+          <div className="text-center text-gray-500">Loading...</div>
         ) : user.isLogged ? (
           <>
-            <Hero />
+            <Hero role={session?.user.role} />
             {allQuizzes.length === 0 ? (
               <PlaceHolder />
             ) : (
-              <div className=''>
-                <h1 className='text-xl font-bold flex gap-2 text-theme px-4 rounded-md py-2 max-w-fit items-center'>
-                  Choose Your Quiz <span><Image src="/arrow1.svg" alt='' width={20} height={20} /></span>
-                </h1>
-                <DropDown />
-                <div className='px-4 my-6 py-3  rounded-md font-bold text-white flex flex-col md:gap-0 gap-6   justify-between md:flex-row bg-theme'>
-                  <div className='w-full md:max-w-fit text-center'>
-                    <span className='mr-2'>Subject :</span>
-                    <select
-                      name="subject"
-                      className="text-theme px-2 rounded-md"
-                      onChange={(e) => setSubject(e.target.value)}
-                      value={subject}
-                    >
-                      <option value="">Select Subject</option> {/* Placeholder option */}
-                      <option value="Math">Math</option>
-                      <option value="English">English</option>
-                      <option value="Science">Science</option>
-                    </select>
-                  </div >
-                  <div  className='w-full md:max-w-fit text-center'>
-                    <span className='mr-2'>Grade :</span>
-                    <select
-                      name="grade"
-                      className="text-theme px-2 rounded-md"
-                      onChange={(e) => setGrade(e.target.value)}
-                      value={grade}
-                    >
-                      <option value="">Select Grade</option> {/* Placeholder option */}
-                      <option value="3">3</option>
-                      <option value="6">6</option>
-                      <option value="9">9</option>
-                    </select>
-                  </div>
-                  <div className="relative w-full md:max-w-fit text-center items-center flex">
-                    <button
-                      className="text-white px-2 rounded-md flex items-center gap-1"
-                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      disabled={!subject || !grade} // Disable if subject or grade is not selected
-                    >
-                      {skill || 'Select Outcome'} <span className="text-sm ml-2">▼</span> {/* Arrow down icon */}
-                    </button>
-                    {isDropdownOpen && (
-                      <ul
-                        className="absolute top-10 left-0 z-10 bg-themeYellow border border-gray-200 rounded-md w-48 max-h-60 overflow-y-auto shadow-lg"
-                        onMouseLeave={() => setIsDropdownOpen(false)} // Close dropdown on mouse leave
-                      >
-                        {filteredOutcomes.map((outcome, index) => (
-                          <li
-                            key={index}
-                            className="p-2 text-center hover:bg-theme border-b-2 border-theme cursor-pointer"
-                            onClick={() => {
-                              setSkill(outcome);
-                              setIsDropdownOpen(false);
-                            }}
-                            onMouseEnter={() => setHoveredOutcome(outcome)} // Set hovered outcome
-                            onMouseLeave={() => setHoveredOutcome(null)} // Clear hovered outcome
-                          >
-                            Domain {index + 1}
-                          </li>
-                        ))}
-                      </ul>
+              <div>
+                {/* Filters for Admin */}
+                {session?.user.role === 'AD' && (
+                  <div className="mb-6">
+                    <h2 className="text-2xl text-theme font-semibold mb-4">Filter Quizzes</h2>
+                    <div className="flex flex-col sm:flex-row gap-4 bg-gray-100 p-4 rounded-lg">
+                      <div className="flex-1">
+                        <label className="text-theme font-medium">Subject:</label>
+                        <select
+                          name="subject"
+                          className="mt-1 w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-theme focus:border-transparent"
+                          onChange={(e) => setSubject(e.target.value)}
+                          value={subject}
+                        >
+                          <option value="">Select Subject</option>
+                          <option value="Math">Math</option>
+                          <option value="English">English</option>
+                          <option value="Science">Science</option>
+                        </select>
+                      </div>
+                      <div className="flex-1">
+                        <label className="text-theme font-medium">Grade:</label>
+                        <select
+                          name="grade"
+                          className="mt-1 w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-theme focus:border-transparent"
+                          onChange={(e) => setGrade(e.target.value)}
+                          value={grade}
+                        >
+                          <option value="">Select Grade</option>
+                          <option value="3">3</option>
+                          <option value="6">6</option>
+                          <option value="9">9</option>
+                        </select>
+                      </div>
+                      <div className="flex-1 relative">
+                        <label className="text-theme font-medium">Skill:</label>
+                        <button
+                          className="mt-1 w-full p-2 bg-white border border-gray-300 rounded-md text-left text-gray-700 flex justify-between items-center"
+                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                          disabled={!subject || !grade}
+                        >
+                          {skill === '' ? 'Select Skill' : truncateText(skill, 5)}
+                          <span>▼</span>
+                        </button>
+                        {isDropdownOpen && (
+                          <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md max-h-60 overflow-y-auto shadow-lg">
+                            {filteredOutcomes.map((outcome, index) => (
+                              <li
+                                key={index}
+                                className="p-2 hover:bg-theme hover:text-white cursor-pointer"
+                                onClick={() => {
+                                  setSkill(outcome);
+                                  setIsDropdownOpen(false);
+                                }}
+                                onMouseEnter={() => setHoveredOutcome(outcome)}
+                                onMouseLeave={() => setHoveredOutcome(null)}
+                              >
+                                Outcome {index + 1}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                    {hoveredOutcome && (
+                      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md modal-content">
+                          <h3 className="text-lg font-bold text-theme mb-4">Outcome Details</h3>
+                          <p className="text-gray-700">{hoveredOutcome}</p>
+                        </div>
+                      </div>
                     )}
                   </div>
-                </div>
+                )}
 
-                {hoveredOutcome && (
-                  <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-md modal-content">
-                      <h3 className="text-lg font-bold text-theme mb-4">Outcome Details</h3>
-                      <p className="text-gray-700">{hoveredOutcome}</p>
-                     
+                {/* Subject Selection for Students */}
+                {session?.user.role === 'ST' && !selectedSubject && (
+                  <div className="mb-6 ">
+                    <h2 className="text-2xl text-theme font-semibold mb-4">Choose Your Subject</h2>
+                    <div className="flex flex-wrap gap-4 justify-center">
+                      {subjectBoxes.map((box, index) => (
+                        <div
+                          key={index}
+                          onClick={() => setSelectedSubject(box.name)}
+                          className="cursor-pointer flex flex-col items-center justify-center w-40 h-40 bg-theme rounded-lg shadow-md hover:bg-themeYellow hover:text-black text-white transition-all duration-300"
+                        >
+                          <Image src={box.icon} width={60} height={60} alt={box.name} />
+                          <span className="mt-2 text-lg font-semibold">{box.name}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
 
-              <div className='flex items-center justify-between'>
-              <h2 className="text-xl font-bold flex gap-2 text-theme px-4 rounded-md py-2 max-w-fit items-center">
-                  <span><Image src='/earth.svg' width={30} height={30} alt="" /></span>My Quizzes ...
-                </h2>
-                <button onClick={() => router.push('/quizzes-manage')} className='text-lg font-bold flex gap-2 text-theme px-4 rounded-md py-2 max-w-fit items-center'>Quizzes Management</button>
-              </div>
-                <div className="mt-6 flex gap-2 flex-wrap">
-                  <div className="flex gap-2 flex-wrap items-center">
-                    {quizzes.map((singleQuiz, quizIndex) => (
-                      <div key={quizIndex} className='flex-grow md:flex-grow-0'>
-                        <QuizCard singleQuiz={singleQuiz} />
-                      </div>
-                    ))}
-                    {session && session.user.role === 'AD' && (
-                      <div
-                        onClick={() => router.push('/quiz-build')}
-                        className="cursor-pointer justify-center items-center rounded-[10px] w-[230px] flex flex-col gap-2 border border-gray-100 bg-white p-4"
-                      >
-                        <Image src={'/add-quiz.png'} width={160} height={160} alt="" />
-                        <span className="select-none opacity-40">Add a new Quiz</span>
-                      </div>
-                    )}
-                  </div>
+                {/* Quizzes Section */}
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl text-theme font-semibold flex items-center gap-2">
+                    <Image src="/earth.svg" width={24} height={24} alt="" />
+                    My Quizzes
+                  </h2>
+                  {session?.user.role === 'AD' && (
+                    <button
+                      onClick={() => router.push('/quizzes-manage')}
+                      className="text-theme font-semibold hover:underline flex items-center gap-2"
+                    >
+                      Quizzes Management
+                    </button>
+                  )}
                 </div>
-                <button
-                  className="text-xl font-bold flex gap-2 text-theme px-4 rounded-md mt-8 py-2 max-w-fit"
-                  onClick={() => setStatShow(!statShow)}
-                >
-                  <span><Image src={'/statistics.svg'} width={20} height={20} alt="" /></span>Statistics ...
-                </button>
 
-                {statShow && (
+                <div className="flex flex-wrap gap-4">
+                  {session?.user.role === 'ST' && selectedSubject ? (
+                    <>
+                      {assignedQuizzes?.length > 0 ? (
+                        assignedQuizzes
+                          .filter((singleQuiz) => singleQuiz.quiz.subject === selectedSubject)
+                          .map((singleQuiz, quizIndex) => (
+                            <QuizCard
+                              key={quizIndex}
+                              singleQuiz={singleQuiz.quiz}
+                              assignQuizToGrade={assignQuizToGrade}
+                              role={session.user.role}
+                              assignedQuizzes={assignedQuizzes}
+                              userQuizzes={userQuizzes}
+                            />
+                          ))
+                      ) : (
+                        <p className="text-gray-600">No quizzes assigned for {selectedSubject}.</p>
+                      )}
+                      <button
+                        onClick={() => setSelectedSubject(null)}
+                        className="text-theme font-semibold underline mt-4"
+                      >
+                        Back to Subjects
+                      </button>
+                    </>
+                  ) : (
+                    session?.user.role === 'AD' && (
+                      <>
+                        {quizzes.map((singleQuiz, quizIndex) => (
+                          <QuizCard
+                            key={quizIndex}
+                            singleQuiz={singleQuiz}
+                            hoveredOutcome={hoveredOutcome}
+                            assignQuizToGrade={assignQuizToGrade}
+                            role={session.user.role}
+                          />
+                        ))}
+                        <div
+                          onClick={() => router.push('/quiz-build')}
+                          className="cursor-pointer flex flex-col items-center justify-center w-56 h-56 bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-all"
+                        >
+                          <Image src="/add-quiz.png" width={120} height={120} alt="" />
+                          <span className="mt-2 text-gray-500">Add a New Quiz</span>
+                        </div>
+                      </>
+                    )
+                  )}
+                </div>
 
-                  <ShowStatistics  />
-                  
+                {/* Statistics Button */}
+                {session?.user.role === 'AD' && (
+                  <button
+                    className="mt-6 text-theme font-semibold flex items-center gap-2 hover:underline"
+                    onClick={() => setStatShow(!statShow)}
+                  >
+                    <Image src="/statistics.svg" width={20} height={20} alt="" />
+                    {statShow ? 'Hide Statistics' : 'Show Statistics'}
+                  </button>
                 )}
+                {statShow && <ShowStatistics />}
               </div>
             )}
           </>
         ) : (
-          <div className="h-96 flex flex-col text-2xl gap-4 justify-center items-center">
-            <h2 className="font-bold md:text-5xl text-themeYellow">
+          <div className="py-12 text-center">
+            <h2 className="text-4xl font-bold text-themeYellow mb-4">
               <span className="text-theme">NAFS</span> Training Platform
             </h2>
-            <span className="text-xl font-semibold text-center">
-              Unlock Your Potential with Personalized Quizzes
-            </span>
+            <p className="text-lg text-gray-600 mb-6">Unlock Your Potential with Personalized Quizzes</p>
             <button
-              onClick={() => {
-                setUser((prevUser) => ({ ...prevUser, isLogged: true }));
-              }}
-              className="p-4 bg-theme text-white font-semibold rounded-md"
+              onClick={() => setUser((prevUser) => ({ ...prevUser, isLogged: true }))}
+              className="px-6 py-3 bg-gradient-to-r from-theme to-themeYellow text-white font-semibold rounded-md shadow-md hover:shadow-lg transition-all"
             >
               Get Started Now!
             </button>

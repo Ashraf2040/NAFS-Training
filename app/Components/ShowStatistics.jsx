@@ -1,15 +1,16 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
 const ShowStatistics = () => {
-  const [students, setStudents] = React.useState([]);
+  const [students, setStudents] = useState([]);
+  const [filteredStudents, setFilteredStudents] = useState([]);
+  const [nameFilter, setNameFilter] = useState("");
+  const [gradeFilter, setGradeFilter] = useState("");
 
   useEffect(() => {
-    // Define an async function inside useEffect
     const fetchStudents = async () => {
       try {
-        // Fetch data from the API
         const response = await fetch("/api/students", {
           method: "GET",
           headers: {
@@ -17,32 +18,40 @@ const ShowStatistics = () => {
           },
         });
 
-        // Check if the response is successful
         if (!response.ok) {
           throw new Error("Failed to fetch students");
         }
 
-        // Parse the JSON data
         const data = await response.json();
-
-        // Update the state with the fetched students
         setStudents(data);
+        setFilteredStudents(data); // Initialize filtered students
       } catch (error) {
         console.error("Error fetching students:", error);
       }
     };
 
-    // Call the async function
     fetchStudents();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []);
 
-  // Function to calculate the percentage for a single trial
+  // Filter students when nameFilter or gradeFilter changes
+  useEffect(() => {
+    const filtered = students.filter((student) => {
+      const matchesName = student.fullName
+        .toLowerCase()
+        .includes(nameFilter.toLowerCase());
+      const matchesGrade = gradeFilter
+        ? student.grade === gradeFilter
+        : true;
+      return matchesName && matchesGrade;
+    });
+    setFilteredStudents(filtered);
+  }, [nameFilter, gradeFilter, students]);
+
   const calculateTrialPercentage = (score, numberOfQuestions) => {
-    const maxScore = numberOfQuestions * 10; // Maximum possible score for the quiz
-    return Math.round((score / maxScore) * 100); // Calculate percentage
+    const maxScore = numberOfQuestions * 10;
+    return Math.round((score / maxScore) * 100);
   };
 
-  // Function to calculate the average percentage across all trials
   const calculateAveragePercentage = (quizzes) => {
     if (!quizzes || quizzes.length === 0) return 0;
 
@@ -54,10 +63,47 @@ const ShowStatistics = () => {
     return Math.round(totalPercentage / quizzes.length);
   };
 
-  console.log(students);
-
   return (
     <div className="statistcs w-full mt-4 bg-theme h-full rounded-[4px]">
+      {/* Filter Header */}
+      <div className="filter-header p-4 bg-gradient-to-r from-theme to-themeYellow rounded-t-[4px]">
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <label htmlFor="nameFilter" className="block text-white mb-1">
+              Filter by Name
+            </label>
+            <input
+              type="text"
+              id="nameFilter"
+              value={nameFilter}
+              onChange={(e) => setNameFilter(e.target.value)}
+              placeholder="Enter student name..."
+              className="w-full p-2 rounded border border-gray-300 focus:outline-none focus:border-theme"
+            />
+          </div>
+          <div className="flex-1">
+            <label htmlFor="gradeFilter" className="block text-white mb-1">
+              Filter by Grade
+            </label>
+            <select
+              id="gradeFilter"
+              value={gradeFilter}
+              onChange={(e) => setGradeFilter(e.target.value)}
+              className="w-full p-2 rounded border border-gray-300 focus:outline-none focus:border-theme"
+            >
+              <option value="">All Grades</option>
+              {/* Add your grade options here based on your data */}
+              <option value="3">3</option>
+              <option value="6">6</option>
+              <option value="9">9</option>
+             
+              {/* Modify these options based on your actual grade system */}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
       <table className="w-full flex flex-col px-1">
         <thead>
           <tr className="text-white grid grid-cols-9 py-1">
@@ -72,7 +118,7 @@ const ShowStatistics = () => {
           </tr>
         </thead>
         <tbody>
-          {students.map((student, index) => {
+          {filteredStudents.map((student, index) => {
             const averagePercentage = calculateAveragePercentage(student.quizzes);
 
             return (
