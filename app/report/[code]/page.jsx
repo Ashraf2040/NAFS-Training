@@ -31,15 +31,15 @@ const ReportPage = ({ params }) => {
   // Fetch quiz statistics when subject changes
   useEffect(() => {
     if (!code || !selectedSubject) return;
-
+  
     const fetchQuizStats = async () => {
       try {
-        const response = await fetch(`/api/students/${code}/quiz-stats?subject=${selectedSubject}&code=${code}`);
-        if (!response.ok) throw new Error("Failed to fetch quiz stats");
+        const response = await fetch(`/api/students/${code}/quiz-stats?subject=${selectedSubject}`);
+        if (!response.ok) throw new Error('Failed to fetch quiz stats');
         const data = await response.json();
         setQuizStats(data);
       } catch (error) {
-        console.error("Error fetching quiz stats:", error);
+        console.error('Error fetching quiz stats:', error);
       }
     };
     fetchQuizStats();

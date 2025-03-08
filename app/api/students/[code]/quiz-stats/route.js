@@ -2,11 +2,9 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET(req) {
-  const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'localhost';
-  const url = new URL(req.url, `https://${host}`);
-  const { searchParams } = url;
-  const code = searchParams.get('code');
+export async function GET(req, { params }) {
+  const { searchParams } = new URL(req.url);
+  const code = params.code; // From dynamic route
   const subject = searchParams.get('subject');
 
   if (!code || !subject) {
