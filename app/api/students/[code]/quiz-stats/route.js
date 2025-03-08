@@ -3,11 +3,11 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export async function GET(req) {
-  const { searchParams } = new URL(req.url);
+  const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'localhost';
+  const url = new URL(req.url, `https://${host}`);
+  const { searchParams } = url;
   const code = searchParams.get('code');
   const subject = searchParams.get('subject');
-
-  // console.log("subject and code is ", code, subject);
 
   if (!code || !subject) {
     return new Response(JSON.stringify({ message: 'Code and subject are required' }), {
@@ -17,17 +17,12 @@ export async function GET(req) {
   }
 
   try {
-    // Fetch the student with their assignments and completed quizzes
     const student = await prisma.user.findUnique({
       where: { code: parseInt(code) },
       include: {
         assignments: {
           include: { quiz: true },
-          where: {
-            quiz: {
-              subject: subject, // Filter assignments by subject
-            },
-          },
+          where: { quiz: { subject } },
         },
         quizzes: {
           include: { quiz: true },
@@ -42,14 +37,12 @@ export async function GET(req) {
       });
     }
 
-    // Process quiz statistics based on assigned quizzes only
     const quizStats = student.assignments.map((assignment) => {
       const quiz = assignment.quiz;
       const completedQuiz = student.quizzes.find((q) => q.quizId === quiz.id);
-
       return {
         quizTitle: quiz.quizTitle,
-        assigned: true, // All quizzes here are assigned
+        assigned: true,
         completed: !!completedQuiz,
         score: completedQuiz ? completedQuiz.score : null,
       };
