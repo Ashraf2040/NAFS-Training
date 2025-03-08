@@ -9,6 +9,10 @@ const ReportPage = ({ params }) => {
   const [selectedSubject, setSelectedSubject] = useState("");
   const reportRef = useRef(null);
 
+  // Unwrap params using React.use()
+  const unwrappedParams = React.use(params);
+  const { code } = unwrappedParams;
+
   // Fetch students
   useEffect(() => {
     const fetchStudents = async () => {
@@ -26,11 +30,11 @@ const ReportPage = ({ params }) => {
 
   // Fetch quiz statistics when subject changes
   useEffect(() => {
-    if (!params.code || !selectedSubject) return;
+    if (!code || !selectedSubject) return;
 
     const fetchQuizStats = async () => {
       try {
-        const response = await fetch(`/api/students/${params.code}/quiz-stats?subject=${selectedSubject}&code=${params.code}`);
+        const response = await fetch(`/api/students/${code}/quiz-stats?subject=${selectedSubject}&code=${code}`);
         if (!response.ok) throw new Error("Failed to fetch quiz stats");
         const data = await response.json();
         setQuizStats(data);
@@ -39,9 +43,9 @@ const ReportPage = ({ params }) => {
       }
     };
     fetchQuizStats();
-  }, [params.code, selectedSubject]);
+  }, [code, selectedSubject]);
 
-  const currentStudent = students?.find((student) => student.code == params.code);
+  const currentStudent = students?.find((student) => student.code == code);
   const quizzes = currentStudent?.quizzes || [];
 
   // Calculate totals
@@ -96,7 +100,7 @@ const ReportPage = ({ params }) => {
           </div>
           <div className="flex items-center">
             <span className="text-gray-600 font-medium w-40">Code:</span>
-            <span className="text-themeYellow font-semibold">{params.code}</span>
+            <span className="text-themeYellow font-semibold">{code}</span>
           </div>
           <div className="flex items-center">
             <span className="text-gray-600 font-medium w-40">Grade:</span>
@@ -186,7 +190,7 @@ const ReportPage = ({ params }) => {
       <div className="p-6">
         <h2 className="text-2xl text-theme font-semibold mb-4">Progress Overview</h2>
         <div className="h-[500px]">
-          <Chart code={params.code} />
+          <Chart code={code} />
         </div>
       </div>
     </div>
