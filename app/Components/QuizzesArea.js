@@ -244,7 +244,7 @@ console.log(mappedStudent)
                           onClick={() => setSelectedSubject(box.name)}
                           className="cursor-pointer flex flex-col items-center justify-center w-40 h-40 bg-theme rounded-lg shadow-md hover:bg-themeYellow hover:text-black text-white transition-all duration-300"
                         >
-                          <Image src={box.icon} width={60} height={60} alt={box.name} />
+                          {/* <Image src={box.icon} width={60} height={60} alt={box.name} /> */}
                           <span className="mt-2 text-lg font-semibold">{box.name}</span>
                         </div>
                       ))}
