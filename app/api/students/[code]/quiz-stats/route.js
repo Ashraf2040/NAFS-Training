@@ -7,7 +7,7 @@ export async function GET(req) {
   const code = searchParams.get('code');
   const subject = searchParams.get('subject');
 
-  console.log("subject and code is ", code, subject);
+  // console.log("subject and code is ", code, subject);
 
   if (!code || !subject) {
     return new Response(JSON.stringify({ message: 'Code and subject are required' }), {

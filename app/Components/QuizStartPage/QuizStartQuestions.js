@@ -112,7 +112,7 @@ function QuizStartQuestions({ onUpdateTime }) {
   };
 
   return (
-    <div className="poppins mx-auto my-8 max-w-4xl bg-white shadow-lg rounded-lg overflow-hidden">
+    <div className="poppins mx-auto my-8 max-w-6xl bg-white shadow-lg rounded-lg overflow-hidden">
       <Toaster />
       {/* Header */}
       <div className="bg-gradient-to-r from-theme to-themeYellow p-4">
@@ -217,7 +217,7 @@ function ScoreComponent({ quizStartParentProps }) {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white max-w-2xl w-full mx-4 rounded-lg shadow-xl overflow-hidden">
+      <div className="bg-white max-w-6xl w-full mx-4 rounded-lg shadow-xl overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-theme to-themeYellow p-4 flex justify-between items-center">
           <h3 className="text-xl text-white font-semibold">Quiz Results</h3>

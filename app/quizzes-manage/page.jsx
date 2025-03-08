@@ -113,7 +113,7 @@ export default function QuizzesManagePage() {
   };
 
   return (
-    <div className="poppins min-h-screen bg-gray-100">
+    <div className="poppins min-h-screen ">
      
       <div className="mx-auto max-w-6xl my-8">
         <Toaster />

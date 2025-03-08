@@ -29,7 +29,7 @@ export async function GET(request) {
 
     return NextResponse.json({ quizzesAssigned });
   } catch (error) {
-    console.error('Error fetching assigned quizzes:', error);
+    
     return NextResponse.json({ message: error.message }, { status: 500 });
   } finally {
     await prisma.$disconnect(); // Ensure Prisma disconnects after the query

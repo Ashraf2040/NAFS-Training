@@ -256,7 +256,7 @@ function QuizBuildTitle({ focusProp, onChangeQuizTitle, onSubjectChange, onGrade
                   onMouseEnter={() => setHoveredOutcome(outcome)} // Set hovered outcome
                   onMouseLeave={() => setHoveredOutcome(null)} // Clear hovered outcome
                 >
-                  Domain {index + 1}
+                Outcome {index + 1}
                 </li>
               ))}
             </ul>

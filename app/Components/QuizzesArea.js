@@ -261,7 +261,7 @@ console.log(mappedStudent)
                   {session?.user.role === 'AD' && (
                     <button
                       onClick={() => router.push('/quizzes-manage')}
-                      className="text-theme font-semibold hover:underline flex items-center gap-2"
+                      className="text-white bg-gradient-to-r from-amber-500 to-orange-600 font-semibold hover:underline px-6 py-2 rounded-full flex items-center gap-2"
                     >
                       Quizzes Management
                     </button>

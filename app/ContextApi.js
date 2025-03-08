@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { quizzesData } from './QuizzesData';
+
 import { faQuestion } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
 import { useSession } from 'next-auth/react';

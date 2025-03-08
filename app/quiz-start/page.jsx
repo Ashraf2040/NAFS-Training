@@ -41,7 +41,7 @@ function Page(props) {
         </div>
       ) : (
         <>
-          <QuizStartHeader parentTimer={parentTimer} />
+          {/* <QuizStartHeader parentTimer={parentTimer} /> */}
           <div className="mt-10 flex items-center justify-center">
             <QuizStartQuestions onUpdateTime={onUpdateTime} />
           </div>

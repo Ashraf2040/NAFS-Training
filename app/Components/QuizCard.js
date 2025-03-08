@@ -12,7 +12,7 @@ import Link from 'next/link';
 import useGlobalContextProvider from '../ContextApi';
 import { icon } from '@fortawesome/fontawesome-svg-core';
 import convertToFaIcons from '../convertToFaIcons';
-import { getUserQuizzes } from '../../lib/userQuizzes';
+
 
 // function successRate(singleQuiz) {
 //   let correctQuestions = 0;

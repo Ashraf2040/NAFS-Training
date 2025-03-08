@@ -9,7 +9,7 @@ export async function POST(request) {
     const datareceived = await request.json();
     const { quizTitle, icon, quizQuestions, id } = datareceived.quiz;
     const { subject, grade, skill } = datareceived;
-console.log(quizTitle,icon,quizQuestions,id,subject,grade,skill)
+// console.log(quizTitle,icon,quizQuestions,id,subject,grade,skill)
     // Validate required fields
     if ( !quizQuestions || !subject || !grade || !skill) {
       return NextResponse.json(

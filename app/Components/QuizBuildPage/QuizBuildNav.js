@@ -150,7 +150,7 @@ function QuizBuildNav({ newQuiz, setNewQuiz }) {
   return (
     <div className="poppins my-12 flex justify-between items-center ">
       <div className="flex gap-2 items-center">
-        <Image src="/hero-img.svg" alt="" height={100} width={100} />
+     
         <span className="text-2xl">
           Quiz <span className="text-theme font-bold">Builder</span>
         </span>

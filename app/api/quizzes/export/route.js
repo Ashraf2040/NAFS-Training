@@ -10,7 +10,7 @@ export async function GET(request) {
     const grade = searchParams.get('grade');
     const subject = searchParams.get('subject');
     const skill = searchParams.get('skill');
-console.log(grade,subject,skill)
+// console.log(grade,subject,skill)
 
     // Fetch quizzes with optional filters
     const quizzes = await prisma.quiz.findMany({

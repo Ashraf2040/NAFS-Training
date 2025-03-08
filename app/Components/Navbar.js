@@ -4,15 +4,13 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';   
-
 import Link from 'next/link';
 import { useSelector, useDispatch } from 'react-redux';
-import   
- { clearUser, setUser } from '../reducers/userSlice';
+import { clearUser, setUser } from '../reducers/userSlice';
 
 function Navbar(props) {
   const { data: session } = useSession();
-  const [myUser,setMyUser] = useState({})
+  const [myUser, setMyUser] = useState({});
   const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const router = useRouter();
@@ -20,70 +18,56 @@ function Navbar(props) {
   useEffect(() => {
     if (session) {
       dispatch(setUser(session.user));
-      setMyUser(session.user)
+      setMyUser(session.user);
     } else {
       dispatch(clearUser());
     }
-  }, [ dispatch,session]);
- 
-  
-      // setCurrentScore(session?.user?.score)   
-     
-
+  }, [dispatch, session]);
 
   return (
-  
-      <div className="relative  md:px-8 shadow-md  pt-4 sm:flex sm:flex-col md:flex-row  justify-between  text-theme    rounded-md mx-auto ">
-      
-        <div className=" items-center     sm:flex-col   md:flex-row justify-between  max-h-fit">
-          <Link href="/" className="flex   md:gap-1 items-center  justify-around  ">
-            <Image
-              src="/hero-img.svg"
-              alt=""
-              width={90}
-              height={90}
-             
-            />
+    <nav className="bg-white px-4 md:px-8 py-4 shadow-lg rounded-b-xl mx-auto max-w-7xl">
+      <div className="flex flex-col md:flex-row justify-between items-center">
+        {/* Logo Section */}
+        <Link href="/" className="flex items-center gap-2 mb-4 md:mb-0 transition-transform hover:scale-105">
+          <Image
+            src="/hero-img.svg"
+            alt="Logo"
+            width={90}
+            height={90}
+            className="object-contain"
+          />
+        </Link>
+
+        {/* User Info and Buttons */}
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          {session && (
+            <div className="flex items-center gap-3 bg-gray-100 px-4 py-2 rounded-full">
+              <span className="text-lg font-semibold text-gray-800">
+                Welcome, {myUser?.name}
+              </span>
+            </div>
+          )}
           
-          </Link>
-          
-        </div>
-        <div className='flex justify-center bg-red-400~'>
-          
-        </div>
-       
-        <div className="mt-4 flex flex-col gap-4 sm:mt-0 sm:flex-row sm:items-center">
-          <div className='flex items-center   flex-col md:flex-row justify-center gap-6 relative'>
-            {session && (
-              <div className="flex gap-2 ">
-                <span className='text-[19px] text-theme font-bold'>
-                   <span className=''>Welcome : {myUser?.name}</span>
-                </span>
-              </div>
-            )}
-            {session ? (
-              <button
-                className="block rounded-full bg-themeYellow px-2 py-2 text-sm font-semibold text-white transition focus:outline-none  w-4/5 md:w-fit"
-                type="button"
-                onClick={() => signOut()}
-              >
-               <button>Logout</button>
-              </button>
-            ) : (
-              <button
-                className="block rounded-lg bg-theme px-7 py-3 text-lg font-medium text-white transition focus:outline-none"
-                type="button"
-                onClick={() => {
-                  router.push('/login');
-                }}
-              >
-                Login
-              </button>
-            )}
-          </div>
+          {session ? (
+            <button
+              className="relative bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-2 rounded-full text-white font-semibold text-sm hover:from-amber-600 hover:to-orange-700 transition-all duration-300 transform hover:scale-105 focus:outline-none shadow-md"
+              type="button"
+              onClick={() => signOut()}
+            >
+              Logout
+            </button>
+          ) : (
+            <button
+              className="relative bg-gradient-to-r from-theme to-themeYellow px-8 py-3 rounded-full text-white font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105 focus:outline-none shadow-md"
+              type="button"
+              onClick={() => router.push('/login')}
+            >
+              Login
+            </button>
+          )}
         </div>
       </div>
-
+    </nav>
   );
 }
 
