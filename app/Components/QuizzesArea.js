@@ -44,9 +44,10 @@ function QuizzesArea({ props }) {
     };
     getStudentData();
   }, [setStudents]);
-
+ console.log(students)
+ console.log('Session:', session);
   const mappedStudent = students?.filter((student) => student.code === session?.user.code);
-
+console.log(mappedStudent)
   useEffect(() => {
     const assignedQuizzes = async () => {
       try {
