@@ -115,7 +115,7 @@ export default function QuizzesManagePage() {
   return (
     <div className="poppins min-h-screen ">
      
-      <div className="mx-auto max-w-6xl my-8">
+      <div className="mx-auto max-w-7xl my-8">
         <Toaster />
         {/* Header */}
         <div className="bg-gradient-to-r from-theme to-themeYellow p-6 rounded-t-lg shadow-lg">

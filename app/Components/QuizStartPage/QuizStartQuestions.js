@@ -112,7 +112,7 @@ function QuizStartQuestions({ onUpdateTime }) {
   };
 
   return (
-    <div className="poppins mx-auto my-8 max-w-6xl bg-white shadow-lg rounded-lg overflow-hidden">
+    <div className="poppins mx-auto my-8 max-w-7xl  bg-white shadow-lg rounded-lg overflow-hidden">
       <Toaster />
       {/* Header */}
       <div className="bg-gradient-to-r from-theme to-themeYellow p-4">

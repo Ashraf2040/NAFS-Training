@@ -26,6 +26,7 @@ model Quiz {
 model Question {
   id              String  @id @default(cuid())
   mainQuestion    String
+  imageUrl        String?
   choices         String[]
   correctAnswer   Int
   answeredResult  Int      @default(-1)

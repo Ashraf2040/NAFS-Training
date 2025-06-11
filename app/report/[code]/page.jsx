@@ -69,7 +69,7 @@ const ReportPage = ({ params }) => {
   };
 
   return (
-    <div className="mx-auto my-8 max-w-5xl bg-white shadow-lg rounded-lg overflow-hidden" ref={reportRef}>
+    <div className="mx-auto my-8 max-w-7xl bg-white shadow-lg rounded-lg overflow-hidden" ref={reportRef}>
       {/* Header */}
       <div className="relative bg-gradient-to-r from-theme to-themeYellow p-6">
         <Image 

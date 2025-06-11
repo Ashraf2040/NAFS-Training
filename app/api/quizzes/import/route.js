@@ -27,41 +27,66 @@ export async function POST(request) {
       skip_empty_lines: true,
     });
 
-    // Transform CSV data into Prisma format
-    const quizzes = records.map((record) => {
-      return {
-        id: record.id || uuidv4(), // Generate a UUID if id is missing
-        quizTitle: record.quizTitle,
-        grade: grade || record.grade,
-        subject: subject || record.subject,
-        skill: skill || record.skill,
-        icon: record.icon,
-        quizQuestions: {
+    // Group questions by quizId
+    const quizzesMap = new Map();
+    records.forEach((record) => {
+      const quizId = record.quizId || uuidv4();
+      if (!quizzesMap.has(quizId)) {
+        quizzesMap.set(quizId, {
+          id: quizId,
+          quizTitle: record.quizTitle,
+          grade: grade || record.grade,
+          subject: subject || record.subject,
+          skill: skill || record.skill,
+          icon: record.icon,
+          quizQuestions: [],
+        });
+      }
+      const quiz = quizzesMap.get(quizId);
+      quiz.quizQuestions.push({
+        id: record.questionId || uuidv4(),
+        mainQuestion: record.mainQuestion,
+        choices: record.choices.split('|'),
+        correctAnswer: parseInt(record.correctAnswer),
+        answeredResult: parseInt(record.answeredResult),
+        statistics: {
           create: {
-            id: record.questionId || uuidv4(), // Generate a UUID for the question
-            mainQuestion: record.mainQuestion,
-            choices: record.choices.split('|'),
-            correctAnswer: parseInt(record.correctAnswer),
-            answeredResult: parseInt(record.answeredResult),
-            statistics: {
-              create: {
-                totalAttempts: parseInt(record.totalAttempts),
-                correctAttempts: parseInt(record.correctAttempts),
-                incorrectAttempts: parseInt(record.incorrectAttempts),
-              },
-            },
+            totalAttempts: parseInt(record.totalAttempts),
+            correctAttempts: parseInt(record.correctAttempts),
+            incorrectAttempts: parseInt(record.incorrectAttempts),
           },
         },
-      };
+      });
     });
 
-    // Insert quizzes into the database
+    const quizzes = Array.from(quizzesMap.values());
+
+    // Insert or update quizzes into the database
     for (const quiz of quizzes) {
       try {
         await prisma.quiz.upsert({
           where: { id: quiz.id },
-          update: quiz,
-          create: quiz,
+          update: {
+            quizTitle: quiz.quizTitle,
+            grade: quiz.grade,
+            subject: quiz.subject,
+            skill: quiz.skill,
+            icon: quiz.icon,
+            quizQuestions: {
+              create: quiz.quizQuestions,
+            },
+          },
+          create: {
+            id: quiz.id,
+            quizTitle: quiz.quizTitle,
+            grade: quiz.grade,
+            subject: quiz.subject,
+            skill: quiz.skill,
+            icon: quiz.icon,
+            quizQuestions: {
+              create: quiz.quizQuestions,
+            },
+          },
         });
       } catch (error) {
         console.error('Failed to upsert quiz:', quiz, error);
