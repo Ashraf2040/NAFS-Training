@@ -4,7 +4,6 @@ import { useSession } from 'next-auth/react';
 import toast, { Toaster } from 'react-hot-toast';
 import useGlobalContextProvider from '../ContextApi';
 import QuizHeader from './QuizHeader';
-import SubjectSelector from './SubjectSelector';
 import QuizFilter from './QuizFilter';
 import QuizList from './QuizList';
 import SatQuizGenerator from './SatQuizGenerator';
@@ -13,7 +12,7 @@ import Hero from './Hero';
 import ShowStatistics from './ShowStatistics';
 import { skillsData } from '../../lib/skillsData';
 
-function QuizzesArea({ props }) {
+function AdminQuizzesArea() {
   const { allQuizzes, userObject, isLoadingObject } = useGlobalContextProvider();
   const router = useRouter();
   const { user, setUser } = userObject;
@@ -27,7 +26,6 @@ function QuizzesArea({ props }) {
   const [skill, setSkill] = useState('');
   const [hoveredOutcome, setHoveredOutcome] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [userQuizzes, setUserQuizzes] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [selectedStandard, setSelectedStandard] = useState('');
@@ -56,7 +54,7 @@ function QuizzesArea({ props }) {
   }, []);
 
   const standards = {
-    Chemistry: ['NGSS HS-PS1-1', 'NGSS HS-PS1-2', 'AP Chemistry Unit 1'],
+    Chemistry: ['NGSS HS highschool-PS1-1', 'NGSS HS-PS1-2', 'AP Chemistry Unit 1'],
     Math: ['Common Core Algebra I', 'Common Core Geometry', 'AP Calculus AB'],
     English: ['Common Core ELA 9-10', 'Common Core ELA 11-12', 'AP English Literature'],
   };
@@ -161,11 +159,6 @@ function QuizzesArea({ props }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [hoveredOutcome]);
-
-  const populateQuizzes = () => {
-    if (session && session.user.role === 'AD') return quizzes;
-    else return assignedQuizzes?.quiz;
-  };
 
   const assignQuizToGrade = async (quizId) => {
     if (!grade) {
@@ -376,37 +369,32 @@ function QuizzesArea({ props }) {
   };
 
   return (
-    <div className="poppins mx-8 my-6 max-w-7xl md:min-w-[800px] shadow-lg rounded-lg overflow-hidden">
+    <div className="poppins mx-8 my-6  md:min-w-[800px]  rounded-lg overflow-hidden">
       <Toaster />
-      <QuizHeader user={user} />
+      {/* <QuizHeader user={user} /> */}
       <div className="p-6">
         {status === 'loading' || isLoading ? (
           <div className="text-center text-gray-500">Loading...</div>
         ) : user.isLogged ? (
           <>
             <Hero role={session?.user.role} changeTHeDomain={changeTHeDomain} />
-            {session?.user.role === 'ST' && !selectedSubject && (
-              <SubjectSelector setSelectedSubject={setSelectedSubject} />
-            )}
             <div className={`${activeDomain === 'NAFS Mastering' ? 'block' : 'hidden'}`}>
-              {session?.user.role === 'AD' && (
-                <QuizFilter
-                  subject={subject}
-                  setSubject={setSubject}
-                  grade={grade}
-                  setGrade={setGrade}
-                  skill={skill}
-                  setSkill={setSkill}
-                  isDropdownOpen={isDropdownOpen}
-                  setIsDropdownOpen={setIsDropdownOpen}
-                  filteredOutcomes={filteredOutcomes}
-                  hoveredOutcome={hoveredOutcome}
-                  setHoveredOutcome={setHoveredOutcome}
-                  truncateText={truncateText}
-                />
-              )}
+              <QuizFilter
+                subject={subject}
+                setSubject={setSubject}
+                grade={grade}
+                setGrade={setGrade}
+                skill={skill}
+                setSkill={setSkill}
+                isDropdownOpen={isDropdownOpen}
+                setIsDropdownOpen={setIsDropdownOpen}
+                filteredOutcomes={filteredOutcomes}
+                hoveredOutcome={hoveredOutcome}
+                setHoveredOutcome={setHoveredOutcome}
+                truncateText={truncateText}
+              />
               <QuizList
-                quizzes={populateQuizzes()}
+                quizzes={quizzes}
                 session={session}
                 selectedSubject={selectedSubject}
                 setSelectedSubject={setSelectedSubject}
@@ -415,15 +403,13 @@ function QuizzesArea({ props }) {
                 router={router}
                 allQuizzes={allQuizzes}
               />
-              {session?.user.role === 'AD' && (
-                <button
-                  className="mt-6 text-theme font-semibold flex items-center gap-2 hover:underline"
-                  onClick={() => setStatShow(!statShow)}
-                >
-                  <img src="/statistics.svg" width={20} height={20} alt="" />
-                  {statShow ? 'Hide Statistics' : 'Show Statistics'}
-                </button>
-              )}
+              <button
+                className="mt-6 text-theme font-semibold flex items-center gap-2 hover:underline"
+                onClick={() => setStatShow(!statShow)}
+              >
+                <img src="/statistics.svg" width={20} height={20} alt="" />
+                {statShow ? 'Hide Statistics' : 'Show Statistics'}
+              </button>
               {statShow && <ShowStatistics />}
             </div>
             <div className={`${activeDomain === 'SAT Mastering' ? 'block' : 'hidden'}`}>
@@ -474,4 +460,4 @@ function QuizzesArea({ props }) {
   );
 }
 
-export default QuizzesArea;
+export default AdminQuizzesArea;

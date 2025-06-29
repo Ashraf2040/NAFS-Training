@@ -42,6 +42,7 @@
     "lucide-react": "^0.427.0",
     "mongodb": "^6.8.0",
     "mongoose": "^8.5.2",
+    "motion": "^12.19.1",
     "next": "^15.2.1",
     "next-auth": "^4.24.11",
     "pdf-parse": "^1.1.1",
@@ -53,7 +54,7 @@
     "react-redux": "^9.1.2",
     "react-toastify": "^10.0.5",
     "recharts": "^2.12.7",
-    "tailwind-merge": "^2.5.2",
+    "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^9.0.1"
   },

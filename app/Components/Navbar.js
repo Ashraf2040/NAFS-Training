@@ -25,7 +25,7 @@ function Navbar(props) {
   }, [dispatch, session]);
 
   return (
-    <nav className="bg-white px-4 md:px-8 py-4 shadow-lg rounded-b-xl mx-auto max-w-7xl">
+    <nav className="bg-white px-4 md:px-8 py-4 shadow-lg rounded-b-xl mx-auto ">
       <div className="flex flex-col md:flex-row justify-between items-center">
         {/* Logo Section */}
         <Link href="/" className="flex items-center gap-2 mb-4 md:mb-0 transition-transform hover:scale-105">

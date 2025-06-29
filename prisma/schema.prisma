@@ -12,9 +12,10 @@ model Quiz {
   grade         String
   subject       String
   skill         String
-  icon          String? @default("faQuestion")
+  icon          String?    @default("faQuestion")
   quizTitle     String
-  isAssigned    Boolean @default(false)
+  scope         String? // New field added for scope
+  isAssigned    Boolean    @default(false)
   quizQuestions Question[]
   quizAssets    String[]
   createdAt     DateTime   @default(now())
@@ -22,6 +23,7 @@ model Quiz {
   assignments   QuizAssignment[] // Quizzes assigned by admins
   userQuizzes   UserQuiz[]       // Quizzes completed by students
 }
+
 
 model Question {
   id              String  @id @default(cuid())

@@ -42,7 +42,7 @@ export default function RootLayout({ children }) {
         <title>NAFS QUIZ APP</title>
       </head>
 
-      <body className={`   ${lexend.className}   `}>
+      <body className={`   ${lexend.className} bg-gradient-to-br from-[#1f6f78]/10 to-[#F5A053]/10  `}>
       <Provider store={store}>
         <ContextProvider>
         

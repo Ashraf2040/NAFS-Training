@@ -75,7 +75,7 @@ console.log(userQuizzes)
   const isCompleted = userQuizzes?.some((quiz) => quiz.quizId === singleQuiz.id);
   // const isCompleted = assignedQuizzes.some((quiz) => quiz.id === singleQuiz.id);
   return (
-    <div className="rounded-[10px]  flex flex-col items-center  gap-2 border border-gray-300  p-4">
+    <div className="rounded-[10px] flex flex-col items-center gap-2 border border-gray-300 p-4 bg-white w-72 h-64 shadow transition-all">
       {/* Image Container */}
       <div className={`relative ${hoveredOutcome?"bg-transparent":"bg-theme"}  w-full h-32 flex justify-center items-center  rounded-md `}>
         {/* More Options Icon */}

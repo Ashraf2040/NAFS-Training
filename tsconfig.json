@@ -33,7 +33,7 @@
     "app/api/getUserQuizzes/route.js",
     "app/api/students/[code]/quiz-stats.js",
     "app/api/students/[code]/quiz-stats/route.js"
-  ],
+, "app/Components/Sticky-scroll-reveal.jsx", "app/Components/HeroParallax.jsx"  ],
   "exclude": [
     "node_modules"
   ]

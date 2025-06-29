@@ -1,14 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Navbar from './Components/Navbar';
-import QuizzesArea from './Components/QuizzesArea';
-import useGlobalContextProvider from './ContextApi';
-
-import { Toaster } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { clearUser, setUser } from './reducers/userSlice';
+import { Toaster } from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
-import Hero from './Components/Hero';
+import { clearUser, setUser } from './reducers/userSlice';
+import useGlobalContextProvider from './ContextApi';
+import Navbar from './Components/Navbar';
+import AdminQuizzesArea from './Components/AdminQuizzesArea';
+import StudentQuizzesArea from './Components/StudentQuizzesArea';
 
 export default function Home() {
   const { data: session } = useSession();
@@ -16,20 +16,27 @@ export default function Home() {
   const { user } = useSelector((state) => state.user);
   const { setSelectQuizToStart } = quizToStartObject;
   const { selectedQuiz, setSelectedQuiz } = selectedQuizObject;
-  const [myUser,setMyUser] = useState({})
+  const [myUser, setMyUser] = useState({});
   const dispatch = useDispatch();
+  const router = useRouter();
+
   useEffect(() => {
     if (session) {
       dispatch(setUser(session.user));
-      setMyUser(session.user)
+      setMyUser(session.user);
+      // Redirect based on role
+      if (session.user.role === 'AD') {
+        router.push('/admin');
+      } else if (session.user.role === 'ST') {
+        router.push('/student');
+      }
     } else {
       dispatch(clearUser());
     }
-  }, [ dispatch,session]);
+  }, [dispatch, session, router]);
 
   useEffect(() => {
     setSelectQuizToStart(null);
-    // set the selectedQuiz back to null
     setSelectedQuiz(null);
   }, [setSelectQuizToStart, setSelectedQuiz]);
 
@@ -39,29 +46,25 @@ export default function Home() {
     const handleResize = () => {
       setOpenMenu(false);
     };
-
     window.addEventListener('resize', handleResize);
-    handleResize(); // Call the function once initially to set initial state
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  const handleModeChange = (event) => {
+  const handleModeChange = () => {
     setIsDarkMode(!isDarkMode);
   };
 
   return (
-    <div className='relative  flex items-center justify-center' >
-    
-    
-    <QuizzesArea />
-   
-     
+    <div className="relative flex items-center justify-center">
+      <Toaster />
+      {session?.user.role === 'AD' ? (
+        <AdminQuizzesArea />
+      ) : session?.user.role === 'ST' ? (
+        <StudentQuizzesArea />
+      ) : null}
     </div>
   );
 }
-

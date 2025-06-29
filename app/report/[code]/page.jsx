@@ -7,6 +7,7 @@ const ReportPage = ({ params }) => {
   const [students, setStudents] = useState([]);
   const [quizStats, setQuizStats] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState("");
+  const [isLoadingQuizStats, setIsLoadingQuizStats] = useState(false); // New loading state
   const reportRef = useRef(null);
 
   // Unwrap params using React.use()
@@ -31,8 +32,9 @@ const ReportPage = ({ params }) => {
   // Fetch quiz statistics when subject changes
   useEffect(() => {
     if (!code || !selectedSubject) return;
-  
+
     const fetchQuizStats = async () => {
+      setIsLoadingQuizStats(true); // Set loading to true
       try {
         const response = await fetch(`/api/students/${code}/quiz-stats?subject=${selectedSubject}`);
         if (!response.ok) throw new Error('Failed to fetch quiz stats');
@@ -40,6 +42,8 @@ const ReportPage = ({ params }) => {
         setQuizStats(data);
       } catch (error) {
         console.error('Error fetching quiz stats:', error);
+      } finally {
+        setIsLoadingQuizStats(false); // Set loading to false
       }
     };
     fetchQuizStats();
@@ -69,7 +73,7 @@ const ReportPage = ({ params }) => {
   };
 
   return (
-    <div className="mx-auto my-8 max-w-7xl bg-white shadow-lg rounded-lg overflow-hidden" ref={reportRef}>
+    <div className="mx-8 my-8  bg-white shadow-lg rounded-lg overflow-hidden" ref={reportRef}>
       {/* Header */}
       <div className="relative bg-gradient-to-r from-theme to-themeYellow p-6">
         <Image 
@@ -144,44 +148,50 @@ const ReportPage = ({ params }) => {
         <div className="p-6">
           <h2 className="text-2xl text-theme font-semibold mb-4">{selectedSubject} Quiz Statistics</h2>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse bg-white shadow-sm rounded-lg">
-              <thead>
-                <tr className="bg-theme text-white">
-                  <th className="p-3 text-left rounded-tl-lg">Quiz Title</th>
-                  <th className="p-3 text-center">Assigned</th>
-                  <th className="p-3 text-center">Completed</th>
-                  <th className="p-3 text-center rounded-tr-lg">Score</th>
+            {isLoadingQuizStats ? (
+              <div className="text-center text-gray-500 py-4">
+                Loading quiz statistics...
+              </div>
+            ) : (
+              <table className="w-full verflow-x-auto">
+            <thead>
+              <tr className="bg-theme text-white">
+                <th className="p-3 text-left rounded-tl-lg">Quiz Title</th>
+                <th className="p-3 text-center">Assigned</th>
+                <th className="p-3 text-center">Completed</th>
+                <th className="p-3 text-center rounded-tr-lg">Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {quizStats.length === 0 ? (
+                <tr>
+                  <td colSpan="4" className="p-4 text-center text-gray-500">
+                    No quiz statistics available for this subject.
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {quizStats.length > 0 ? (
-                  quizStats.map((stat, index) => (
-                    <tr key={index} className="border-b last:border-0 hover:bg-gray-50">
-                      <td className="p-3 text-gray-800">{stat.quizTitle}</td>
-                      <td className="p-3 text-center">
-                        <span className={`inline-block w-20 py-1 rounded-full text-white ${stat.assigned ? 'bg-green-500' : 'bg-red-500'}`}>
-                          {stat.assigned ? 'Yes' : 'No'}
-                        </span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <span className={`inline-block w-20 py-1 rounded-full text-white ${stat.completed ? 'bg-green-500' : 'bg-red-500'}`}>
-                          {stat.completed ? 'Yes' : 'No'}
-                        </span>
-                      </td>
-                      <td className="p-3 text-center text-gray-800">
-                        {stat.score !== null ? stat.score : 'N/A'}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="p-4 text-center text-gray-500">
-                      No quiz statistics available for this subject.
+              ) : (
+                quizStats.map((stat, index) => (
+                  <tr key={index} className="border-b last:border-0 hover:bg-gray-50">
+                    <td className="p-3 text-gray-800">{stat.quizTitle}</td>
+                    <td className="p-3 text-center">
+                      <span className={`inline-block w-20 py-1 rounded-full text-white ${stat.assigned ? 'bg-green-500' : 'bg-red-500'}`}>
+                        {stat.assigned ? 'Yes' : 'No'}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <span className={`inline-block w-20 py-1 rounded-full text-white ${stat.completed ? 'bg-green-500' : 'bg-red-500'}`}>
+                        {stat.completed ? 'Yes' : 'No'}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center text-gray-800">
+                      {stat.score !== null ? stat.score : 'N/A'}
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                ))
+              )}
+            </tbody>
+          </table>
+            )}
           </div>
         </div>
       )}
