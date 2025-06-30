@@ -35,6 +35,9 @@ function AdminQuizzesArea() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoadingAction, setIsLoadingAction] = useState(false);
   const [uploadedQuizFile, setUploadedQuizFile] = useState(null);
+const [satQuizzes, setSatQuizzes] = useState([]);
+const [satFilterSubject, setSatFilterSubject] = useState(''); // State for filtering SAT quizzes by subject
+const [showSatQuizzes, setShowSatQuizzes] = useState(false); // State to toggle visibility of SAT quizzes list
 
   useEffect(() => {
     const getStudentData = async () => {
@@ -85,6 +88,11 @@ function AdminQuizzesArea() {
 
     fetchAssignedQuizzes();
   }, [mappedStudent]);
+useEffect(() => {
+  // Filter quizzes with scope "SAT" from allQuizzes
+  const filteredSatQuizzes = allQuizzes.filter(quiz => quiz.scope === 'SAT');
+  setSatQuizzes(filteredSatQuizzes);
+}, [allQuizzes]);
 
   useEffect(() => {
     if (!mappedStudent[0]?.id) return;
@@ -367,6 +375,10 @@ function AdminQuizzesArea() {
     const csvRows = [headers, ...rows].map(row => row.join(','));
     return csvRows.join('\n');
   };
+// Filter SAT quizzes based on selected subject
+const filteredSatQuizzes = satFilterSubject 
+  ? satQuizzes.filter(quiz => quiz.subject === satFilterSubject) 
+  : satQuizzes;
 
   return (
     <div className="poppins mx-8 my-6  md:min-w-[800px]  rounded-lg overflow-hidden">
@@ -402,6 +414,7 @@ function AdminQuizzesArea() {
                 userQuizzes={userQuizzes}
                 router={router}
                 allQuizzes={allQuizzes}
+                activeDomain={activeDomain}
               />
               <button
                 className="mt-6 text-theme font-semibold flex items-center gap-2 hover:underline"
@@ -412,31 +425,80 @@ function AdminQuizzesArea() {
               </button>
               {statShow && <ShowStatistics />}
             </div>
-            <div className={`${activeDomain === 'SAT Mastering' ? 'block' : 'hidden'}`}>
-              <SatQuizGenerator
-                selectedSubject={selectedSubject}
-                setSelectedSubject={setSelectedSubject}
-                selectedStandard={selectedStandard}
-                setSelectedStandard={setSelectedStandard}
-                uploadedFile={uploadedFile}
-                setUploadedFile={setUploadedFile}
-                uploadedQuizFile={uploadedQuizFile}
-                setUploadedQuizFile={setUploadedQuizFile}
-                handleGenerateQuiz={handleGenerateQuiz}
-                handleDirectImport={handleDirectImport}
-                standards={standards}
-              />
-              {isModalOpen && (
-                <Modal
-                  generatedQuiz={generatedQuiz}
-                  handlePreview={handlePreview}
-                  handleDownload={handleDownload}
-                  handleImport={handleImport}
-                  isLoadingAction={isLoadingAction}
-                  setIsModalOpen={setIsModalOpen}
-                />
-              )}
-            </div>
+      <div className={`${activeDomain === 'SAT Mastering' ? 'block' : 'hidden'}`}>
+  <SatQuizGenerator
+    selectedSubject={selectedSubject}
+    setSelectedSubject={setSelectedSubject}
+    selectedStandard={selectedStandard}
+    setSelectedStandard={setSelectedStandard}
+    uploadedFile={uploadedFile}
+    setUploadedFile={setUploadedFile}
+    uploadedQuizFile={uploadedQuizFile}
+    setUploadedQuizFile={setUploadedQuizFile}
+    handleGenerateQuiz={handleGenerateQuiz}
+    handleDirectImport={handleDirectImport}
+    standards={standards}
+  />
+  {isModalOpen && (
+    <Modal
+      generatedQuiz={generatedQuiz}
+      handlePreview={handlePreview}
+      handleDownload={handleDownload}
+      handleImport={handleImport}
+      isLoadingAction={isLoadingAction}
+      setIsModalOpen={setIsModalOpen}
+    />
+  )}
+  {/* Div for SAT Quizzes with Filter and Toggle */}
+  <div className="mt-6">
+    <h2 className="text-2xl font-bold text-theme mb-4">SAT Quizzes</h2>
+    
+    {/* Subject Filter for SAT Quizzes */}
+    <div className="mb-4">
+      <label htmlFor="satSubjectFilter" className="block text-theme font-medium mb-2">
+        Filter by Subject:
+      </label>
+      <select
+        id="satSubjectFilter"
+        value={satFilterSubject}
+        onChange={(e) => setSatFilterSubject(e.target.value)}
+        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-theme"
+      >
+        <option value="">All Subjects</option>
+        {Object.keys(standards).map((subject) => (
+          <option key={subject} value={subject}>
+            {subject}
+          </option>
+        ))}
+      </select>
+    </div>
+    
+    {/* Toggle Button for Showing/Hiding SAT Quizzes */}
+    <button
+      onClick={() => setShowSatQuizzes(!showSatQuizzes)}
+      className="mb-4 px-4 py-2 bg-theme text-white font-semibold rounded-md shadow-md hover:bg-theme-dark transition-all"
+    >
+      {showSatQuizzes ? 'Hide SAT Quizzes' : 'Show SAT Quizzes'}
+    </button>
+    
+    {/* Conditionally Render SAT Quizzes List */}
+    {showSatQuizzes && (
+      <QuizList
+        quizzes={filteredSatQuizzes}
+        session={session}
+        selectedSubject={selectedSubject}
+        setSelectedSubject={setSelectedSubject}
+        assignQuizToGrade={assignQuizToGrade}
+        userQuizzes={userQuizzes}
+        router={router}
+        allQuizzes={allQuizzes}
+      />
+    )}
+  </div>
+</div>
+
+
+
             <div className={`${activeDomain === 'GAT Mastering' ? 'block' : 'hidden'} w-full`}>
               <h1 className="text-center text-theme font-semibold">No GAT Quizzes have been assigned</h1>
             </div>

@@ -12,7 +12,12 @@ function QuizList({
   userQuizzes,
   router,
   allQuizzes,
+ activeDomain
 }) {
+
+
+
+  const scopeManagement= activeDomain === "NAFS Mastering" ? "/quizzes-manage" : "/sat-quizzes-manage"
   return (
     <div>
       {allQuizzes.length === 0 ? (
@@ -26,7 +31,7 @@ function QuizList({
             </h2>
             {session?.user.role === 'AD' && (
               <button
-                onClick={() => router.push('/quizzes-manage')}
+                onClick={() => router.push(scopeManagement)}
                 className="text-white bg-gradient-to-r from-amber-500 to-orange-600 font-semibold hover:underline px-6 py-2 rounded-full flex items-center gap-2"
               >
                 Quizzes Management
@@ -47,6 +52,7 @@ function QuizList({
                         role={session.user.role}
                         assignedQuizzes={quizzes}
                         userQuizzes={userQuizzes}
+                       
                       />
                     ))
                 ) : (
